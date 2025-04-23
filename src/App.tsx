@@ -20,27 +20,25 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
+  <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
       <TooltipProvider>
-        <BrowserRouter>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/signin" element={<SignIn />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/subjects" element={<SubjectsPage />} />
-            <Route path="/subjects/:subjectId" element={<NotesPage />} />
-            <Route path="/subjects/:subjectId/notes/:noteId" element={<NoteDetailPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <Toaster />
+        <Sonner />
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/subjects" element={<SubjectsPage />} />
+          <Route path="/subjects/:subjectId" element={<NotesPage />} />
+          <Route path="/subjects/:subjectId/notes/:noteId" element={<NoteDetailPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
       </TooltipProvider>
-    </QueryClientProvider>
-  </React.StrictMode>
+    </BrowserRouter>
+  </QueryClientProvider>
 );
 
 export default App;

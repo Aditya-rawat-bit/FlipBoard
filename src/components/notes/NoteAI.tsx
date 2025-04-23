@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 interface NoteAIProps {
   noteContent: string;
@@ -16,7 +17,7 @@ export function NoteAI({ noteContent, onInsertText }: NoteAIProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'question' | 'summarize'>('question');
 
-  const handleQuestionSubmit = (e: React.FormEvent) => {
+  const handleQuestionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!question.trim()) {
       toast.error("Please enter a question");
@@ -26,8 +27,10 @@ export function NoteAI({ noteContent, onInsertText }: NoteAIProps) {
     setIsLoading(true);
     setAnswer('');
     
-    // In a real app this would call an AI API
-    setTimeout(() => {
+    try {
+      // Simulate AI API call with setTimeout
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
       let response = '';
       if (question.toLowerCase().includes('explain') || question.toLowerCase().includes('what is')) {
         response = `${question.trim()}?\n\nBased on the content, here's a simplified explanation:\n\n`;
@@ -45,11 +48,15 @@ export function NoteAI({ noteContent, onInsertText }: NoteAIProps) {
       }
       
       setAnswer(response);
+    } catch (error) {
+      console.error("Error processing question:", error);
+      toast.error("Failed to process your question. Please try again.");
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
-  const handleSummarize = () => {
+  const handleSummarize = async () => {
     if (!noteContent.trim()) {
       toast.error("There's no content to summarize");
       return;
@@ -58,8 +65,10 @@ export function NoteAI({ noteContent, onInsertText }: NoteAIProps) {
     setIsLoading(true);
     setAnswer('');
     
-    // In a real app this would call an AI API
-    setTimeout(() => {
+    try {
+      // Simulate AI API call with setTimeout
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
       const summary = "# Summary of Your Note\n\n" +
         "## Key Points\n\n" +
         "- This note covers important concepts related to the subject\n" +
@@ -73,8 +82,12 @@ export function NoteAI({ noteContent, onInsertText }: NoteAIProps) {
         "This note provides a comprehensive overview of the topic, highlighting key areas for further study.";
       
       setAnswer(summary);
+    } catch (error) {
+      console.error("Error summarizing content:", error);
+      toast.error("Failed to summarize content. Please try again.");
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const handleAddToNotes = () => {
@@ -166,7 +179,7 @@ export function NoteAI({ noteContent, onInsertText }: NoteAIProps) {
       
       {isLoading && (
         <div className="flex justify-center py-8">
-          <div className="h-8 w-8 border-2 border-flipboard-purple border-t-transparent rounded-full animate-rotate"></div>
+          <Loader2 className="h-8 w-8 animate-spin text-flipboard-purple" />
         </div>
       )}
     </div>
