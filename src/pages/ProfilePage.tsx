@@ -5,7 +5,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface UserProfile {
