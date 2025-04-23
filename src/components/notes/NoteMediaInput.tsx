@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff, Image } from 'lucide-react';
@@ -12,7 +11,7 @@ interface NoteMediaInputProps {
 export function NoteMediaInput({ onImageAdd, onTextAdd }: NoteMediaInputProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [recognitionSupported] = useState('webkitSpeechRecognition' in window || 'SpeechRecognition' in window);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -44,12 +43,12 @@ export function NoteMediaInput({ onImageAdd, onTextAdd }: NoteMediaInputProps) {
       }
       setIsRecording(false);
     } else {
-      const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
+      const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognitionAPI();
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
 
-      recognitionRef.current.onresult = (event: any) => {
+      recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
         const transcript = Array.from(event.results)
           .map((result: any) => result[0].transcript)
           .join(' ');
@@ -59,7 +58,7 @@ export function NoteMediaInput({ onImageAdd, onTextAdd }: NoteMediaInputProps) {
         }
       };
 
-      recognitionRef.current.onerror = (event: any) => {
+      recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error('Speech recognition error:', event.error);
         toast.error('Error with speech recognition');
         setIsRecording(false);
