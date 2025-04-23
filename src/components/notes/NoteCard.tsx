@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -52,6 +51,23 @@ export function NoteCard({ note, subjectId, onEdit, onDelete }: NoteCardProps) {
     e.stopPropagation();
     // In a real app, this would generate a PDF
     toast.success('Note PDF is being prepared for download!');
+  };
+
+  const renderContent = (content: string) => {
+    return content.split('\n').map((line, idx) => {
+      if (line.startsWith('![image]')) {
+        const imageUrl = line.match(/\((.*?)\)/)?.[1];
+        return imageUrl ? (
+          <img 
+            key={idx} 
+            src={imageUrl} 
+            alt="Note attachment" 
+            className="max-h-32 object-cover rounded-md my-2"
+          />
+        ) : null;
+      }
+      return <p key={idx}>{line}</p>;
+    });
   };
 
   return (
@@ -113,7 +129,7 @@ export function NoteCard({ note, subjectId, onEdit, onDelete }: NoteCardProps) {
           </div>
           
           <div className="text-gray-700 mb-4 line-clamp-3 text-sm">
-            {note.content.replace(/<[^>]*>?/gm, '')}
+            {renderContent(note.content)}
           </div>
           
           <div className="text-xs text-gray-600 mt-auto">

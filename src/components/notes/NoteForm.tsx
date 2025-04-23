@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { NoteMediaInput } from './NoteMediaInput';
 
 interface NoteFormProps {
   open: boolean;
@@ -19,7 +19,8 @@ export function NoteForm({ open, onClose, onSave, initialData, subjectId }: Note
     title: '',
     content: '',
     color: '',
-    subjectId: subjectId
+    subjectId: subjectId,
+    images: [] as string[]
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,7 +38,8 @@ export function NoteForm({ open, onClose, onSave, initialData, subjectId }: Note
         title: initialData.title || '',
         content: initialData.content || '',
         color: initialData.color || colors[0].value,
-        subjectId: subjectId
+        subjectId: subjectId,
+        images: initialData.images || []
       });
     } else {
       setFormData({
@@ -45,7 +47,8 @@ export function NoteForm({ open, onClose, onSave, initialData, subjectId }: Note
         title: '',
         content: '',
         color: colors[0].value,
-        subjectId: subjectId
+        subjectId: subjectId,
+        images: []
       });
     }
   }, [initialData, open, subjectId]);
@@ -53,6 +56,21 @@ export function NoteForm({ open, onClose, onSave, initialData, subjectId }: Note
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageAdd = (imageUrl: string) => {
+    setFormData(prev => ({
+      ...prev,
+      content: prev.content + `\n![image](${imageUrl})`,
+      images: [...prev.images, imageUrl]
+    }));
+  };
+
+  const handleTextAdd = (text: string) => {
+    setFormData(prev => ({
+      ...prev,
+      content: prev.content + (prev.content ? '\n' : '') + text
+    }));
   };
 
   const handleColorChange = (color: string) => {
@@ -69,7 +87,6 @@ export function NoteForm({ open, onClose, onSave, initialData, subjectId }: Note
     
     setIsSubmitting(true);
     
-    // Generate ID if it doesn't exist (new note)
     const noteData = {
       ...formData,
       id: formData.id || `note_${Date.now()}`,
@@ -77,7 +94,6 @@ export function NoteForm({ open, onClose, onSave, initialData, subjectId }: Note
       updatedAt: new Date().toISOString()
     };
     
-    // Simulate API call
     setTimeout(() => {
       try {
         onSave(noteData);
@@ -99,6 +115,9 @@ export function NoteForm({ open, onClose, onSave, initialData, subjectId }: Note
           <DialogTitle>
             {initialData ? 'Edit' : 'Create'} Note
           </DialogTitle>
+          <DialogDescription>
+            Add content using text, voice, or images
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
@@ -118,9 +137,15 @@ export function NoteForm({ open, onClose, onSave, initialData, subjectId }: Note
           </div>
           
           <div>
-            <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
-              Content
-            </label>
+            <div className="flex justify-between items-center mb-1">
+              <label htmlFor="content" className="block text-sm font-medium text-gray-700">
+                Content
+              </label>
+              <NoteMediaInput 
+                onImageAdd={handleImageAdd}
+                onTextAdd={handleTextAdd}
+              />
+            </div>
             <div className="border rounded-md">
               <textarea
                 id="content"

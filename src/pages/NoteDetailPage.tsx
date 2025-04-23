@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -39,7 +38,6 @@ const NoteDetailPage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [showAI, setShowAI] = useState(false);
 
-  // Check if user is authenticated and load data
   useEffect(() => {
     const auth = localStorage.getItem('flipboard_auth');
     if (!auth) {
@@ -53,7 +51,6 @@ const NoteDetailPage = () => {
       return;
     }
     
-    // Load subject
     const savedSubjects = localStorage.getItem('flipboard_subjects');
     if (savedSubjects) {
       const subjects = JSON.parse(savedSubjects);
@@ -68,7 +65,6 @@ const NoteDetailPage = () => {
       }
     }
     
-    // Load note
     const savedNotes = localStorage.getItem('flipboard_notes');
     if (savedNotes) {
       const allNotes = JSON.parse(savedNotes);
@@ -87,7 +83,6 @@ const NoteDetailPage = () => {
   const handleDelete = () => {
     const confirmDelete = window.confirm('Are you sure you want to delete this note?');
     if (confirmDelete && subjectId) {
-      // Delete from localStorage
       const savedNotes = localStorage.getItem('flipboard_notes');
       if (savedNotes && noteId) {
         const allNotes = JSON.parse(savedNotes);
@@ -96,7 +91,6 @@ const NoteDetailPage = () => {
         allNotes[subjectId] = subjectNotes.filter((note: Note) => note.id !== noteId);
         localStorage.setItem('flipboard_notes', JSON.stringify(allNotes));
         
-        // Update subject's noteCount
         const savedSubjects = localStorage.getItem('flipboard_subjects');
         if (savedSubjects) {
           const subjects = JSON.parse(savedSubjects);
@@ -122,7 +116,6 @@ const NoteDetailPage = () => {
   const handleSaveNote = (updatedNote: Note) => {
     if (!subjectId) return;
     
-    // Update note in localStorage
     const savedNotes = localStorage.getItem('flipboard_notes');
     if (savedNotes) {
       const allNotes = JSON.parse(savedNotes);
@@ -138,12 +131,10 @@ const NoteDetailPage = () => {
   };
 
   const handleShare = () => {
-    // In a real app, this would generate a sharing link
     toast.success('Sharing link copied to clipboard!');
   };
 
   const handleDownload = () => {
-    // In a real app, this would generate a PDF
     toast.success('Note PDF is being prepared for download!');
   };
 
@@ -168,6 +159,23 @@ const NoteDetailPage = () => {
       minute: '2-digit'
     };
     return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+  const renderContent = (content: string) => {
+    return content.split('\n').map((line, idx) => {
+      if (line.startsWith('![image]')) {
+        const imageUrl = line.match(/\((.*?)\)/)?.[1];
+        return imageUrl ? (
+          <img 
+            key={idx} 
+            src={imageUrl} 
+            alt="Note attachment" 
+            className="max-w-full rounded-lg shadow-sm my-4"
+          />
+        ) : null;
+      }
+      return <p key={idx} className="mb-4">{line}</p>;
+    });
   };
 
   if (!note || !subject) return null;
@@ -244,9 +252,7 @@ const NoteDetailPage = () => {
             </div>
             
             <div className="prose max-w-none">
-              {note.content.split('\n').map((paragraph, idx) => (
-                <p key={idx}>{paragraph}</p>
-              ))}
+              {renderContent(note.content)}
             </div>
           </div>
           
