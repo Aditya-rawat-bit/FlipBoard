@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -6,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Edit, Trash2, Share, Download, ListTodo } from 'lucide-react';
 import { toast } from 'sonner';
+import { downloadNotePdf } from '@/utils/pdfUtils';
 
 interface Todo {
   id: string;
@@ -58,8 +58,14 @@ export function NoteCard({ note, subjectId, onEdit, onDelete }: NoteCardProps) {
   const handleDownload = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // In a real app, this would generate a PDF
-    toast.success('Note PDF is being prepared for download!');
+    
+    try {
+      downloadNotePdf(note);
+      toast.success('Note PDF downloaded successfully!');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF. Please try again.');
+    }
   };
 
   const renderContent = (content: string) => {

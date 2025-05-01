@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -17,6 +16,7 @@ import {
   ListTodo
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { downloadNotePdf } from '@/utils/pdfUtils';
 
 interface Note {
   id: string;
@@ -152,7 +152,15 @@ const NoteDetailPage = () => {
   };
 
   const handleDownload = () => {
-    toast.success('Note PDF is being prepared for download!');
+    if (!note || !subject) return;
+    
+    try {
+      downloadNotePdf(note, subject.title);
+      toast.success('Note PDF downloaded successfully!');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF. Please try again.');
+    }
   };
 
   const handleInsertAIText = (text: string) => {
