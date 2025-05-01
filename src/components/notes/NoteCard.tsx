@@ -1,9 +1,17 @@
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2, Share, Download } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Edit, Trash2, Share, Download, ListTodo } from 'lucide-react';
 import { toast } from 'sonner';
+
+interface Todo {
+  id: string;
+  text: string;
+  isCompleted: boolean;
+}
 
 interface NoteCardProps {
   note: {
@@ -13,6 +21,7 @@ interface NoteCardProps {
     color?: string;
     createdAt: string;
     updatedAt: string;
+    todos?: Todo[];
   };
   subjectId: string;
   onEdit: (note: any) => void;
@@ -69,6 +78,13 @@ export function NoteCard({ note, subjectId, onEdit, onDelete }: NoteCardProps) {
       return <p key={idx}>{line}</p>;
     });
   };
+
+  const todos = note.todos || [];
+  const completedTodos = todos.filter(todo => todo.isCompleted).length;
+  const hasTodos = todos.length > 0;
+  const todoProgress = todos.length > 0 
+    ? Math.round((completedTodos / todos.length) * 100) 
+    : 0;
 
   return (
     <Card 
@@ -131,6 +147,19 @@ export function NoteCard({ note, subjectId, onEdit, onDelete }: NoteCardProps) {
           <div className="text-gray-700 mb-4 line-clamp-3 text-sm">
             {renderContent(note.content)}
           </div>
+          
+          {hasTodos && (
+            <div className="mb-3">
+              <div className="flex items-center justify-between mb-1 text-xs">
+                <div className="flex items-center">
+                  <ListTodo size={12} className="mr-1" />
+                  <span>Tasks</span>
+                </div>
+                <span>{completedTodos}/{todos.length}</span>
+              </div>
+              <Progress value={todoProgress} className="h-1.5" />
+            </div>
+          )}
           
           <div className="text-xs text-gray-600 mt-auto">
             Updated {formatDate(note.updatedAt)}

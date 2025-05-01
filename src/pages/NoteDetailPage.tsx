@@ -1,16 +1,20 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from "@/components/layout/MainLayout";
 import { NoteForm } from '@/components/notes/NoteForm';
 import { NoteAI } from '@/components/notes/NoteAI';
+import { TodoList, Todo } from '@/components/notes/TodoList';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { 
   ArrowLeft, 
   Edit, 
   Trash2, 
   Share, 
   Download,
-  Search
+  Search,
+  ListTodo
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -22,6 +26,7 @@ interface Note {
   subjectId: string;
   createdAt: string;
   updatedAt: string;
+  todos?: Todo[];
 }
 
 interface Subject {
@@ -129,6 +134,18 @@ const NoteDetailPage = () => {
       setNote(updatedNote);
     }
   };
+  
+  const handleTodoChange = (todos: Todo[]) => {
+    if (!note) return;
+    
+    const updatedNote = {
+      ...note,
+      todos: todos,
+      updatedAt: new Date().toISOString()
+    };
+    
+    handleSaveNote(updatedNote);
+  };
 
   const handleShare = () => {
     toast.success('Sharing link copied to clipboard!');
@@ -179,6 +196,10 @@ const NoteDetailPage = () => {
   };
 
   if (!note || !subject) return null;
+
+  const todos = note.todos || [];
+  const completedTodos = todos.filter(todo => todo.isCompleted).length;
+  const hasTodos = todos.length > 0;
 
   return (
     <MainLayout>
@@ -245,15 +266,38 @@ const NoteDetailPage = () => {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6">
-          <div className={`${showAI ? 'lg:w-2/3' : 'w-full'} bg-white rounded-lg shadow-sm p-6 border`}>
-            <div className={`p-4 mb-4 rounded-lg ${note.color || 'bg-flipboard-soft-purple'}`}>
-              <h2 className="font-semibold text-xl mb-1">{note.title}</h2>
-              <p className="text-sm text-gray-700">in {subject.title}</p>
+          <div className={`${showAI ? 'lg:w-2/3' : 'w-full'} space-y-6`}>
+            <div className="bg-white rounded-lg shadow-sm p-6 border">
+              <div className={`p-4 mb-4 rounded-lg ${note.color || 'bg-flipboard-soft-purple'}`}>
+                <h2 className="font-semibold text-xl mb-1">{note.title}</h2>
+                <p className="text-sm text-gray-700">in {subject.title}</p>
+              </div>
+              
+              <div className="prose max-w-none">
+                {renderContent(note.content)}
+              </div>
             </div>
             
-            <div className="prose max-w-none">
-              {renderContent(note.content)}
-            </div>
+            {hasTodos && (
+              <Card className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <ListTodo size={18} className="mr-2 text-flipboard-purple" />
+                    <h3 className="font-semibold">Tasks</h3>
+                  </div>
+                  
+                  <div className="text-sm text-gray-600">
+                    {completedTodos} of {todos.length} completed
+                  </div>
+                </div>
+                
+                <TodoList 
+                  todos={todos} 
+                  onChange={handleTodoChange}
+                  readOnly={false}
+                />
+              </Card>
+            )}
           </div>
           
           {showAI && (

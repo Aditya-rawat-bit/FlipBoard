@@ -1,9 +1,13 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { NoteMediaInput } from './NoteMediaInput';
+import { TodoList, Todo } from './TodoList';
+import { ListTodo, FileText } from 'lucide-react';
 
 interface NoteFormProps {
   open: boolean;
@@ -20,9 +24,11 @@ export function NoteForm({ open, onClose, onSave, initialData, subjectId }: Note
     content: '',
     color: '',
     subjectId: subjectId,
-    images: [] as string[]
+    images: [] as string[],
+    todos: [] as Todo[]
   });
   
+  const [activeTab, setActiveTab] = useState<'content' | 'todos'>('content');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const colors = [
@@ -39,7 +45,8 @@ export function NoteForm({ open, onClose, onSave, initialData, subjectId }: Note
         content: initialData.content || '',
         color: initialData.color || colors[0].value,
         subjectId: subjectId,
-        images: initialData.images || []
+        images: initialData.images || [],
+        todos: initialData.todos || []
       });
     } else {
       setFormData({
@@ -48,7 +55,8 @@ export function NoteForm({ open, onClose, onSave, initialData, subjectId }: Note
         content: '',
         color: colors[0].value,
         subjectId: subjectId,
-        images: []
+        images: [],
+        todos: []
       });
     }
   }, [initialData, open, subjectId]);
@@ -75,6 +83,10 @@ export function NoteForm({ open, onClose, onSave, initialData, subjectId }: Note
 
   const handleColorChange = (color: string) => {
     setFormData(prev => ({ ...prev, color }));
+  };
+  
+  const handleTodosChange = (todos: Todo[]) => {
+    setFormData(prev => ({ ...prev, todos }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -116,7 +128,7 @@ export function NoteForm({ open, onClose, onSave, initialData, subjectId }: Note
             {initialData ? 'Edit' : 'Create'} Note
           </DialogTitle>
           <DialogDescription>
-            Add content using text, voice, or images
+            Add content using text, voice, images, or tasks
           </DialogDescription>
         </DialogHeader>
         
@@ -136,29 +148,54 @@ export function NoteForm({ open, onClose, onSave, initialData, subjectId }: Note
             />
           </div>
           
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <label htmlFor="content" className="block text-sm font-medium text-gray-700">
-                Content
-              </label>
-              <NoteMediaInput 
-                onImageAdd={handleImageAdd}
-                onTextAdd={handleTextAdd}
-              />
-            </div>
-            <div className="border rounded-md">
-              <textarea
-                id="content"
-                name="content"
-                value={formData.content}
-                onChange={handleChange}
-                placeholder="Write your note here..."
-                disabled={isSubmitting}
-                rows={10}
-                className="w-full p-3 focus:outline-none focus:ring-2 focus:ring-flipboard-purple focus:border-transparent rounded-md"
-              />
-            </div>
-          </div>
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'content' | 'todos')}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="content" className="flex items-center">
+                <FileText size={16} className="mr-1" />
+                Note Content
+              </TabsTrigger>
+              <TabsTrigger value="todos" className="flex items-center">
+                <ListTodo size={16} className="mr-1" />
+                Tasks
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="content" className="mt-4">
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label htmlFor="content" className="block text-sm font-medium text-gray-700">
+                    Content
+                  </label>
+                  <NoteMediaInput 
+                    onImageAdd={handleImageAdd}
+                    onTextAdd={handleTextAdd}
+                  />
+                </div>
+                <div className="border rounded-md">
+                  <textarea
+                    id="content"
+                    name="content"
+                    value={formData.content}
+                    onChange={handleChange}
+                    placeholder="Write your note here..."
+                    disabled={isSubmitting}
+                    rows={10}
+                    className="w-full p-3 focus:outline-none focus:ring-2 focus:ring-flipboard-purple focus:border-transparent rounded-md"
+                  />
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="todos" className="mt-4">
+              <div className="border rounded-md p-3 min-h-[220px]">
+                <p className="text-sm text-gray-600 mb-3">Add tasks to track progress</p>
+                <TodoList 
+                  todos={formData.todos} 
+                  onChange={handleTodosChange}
+                />
+              </div>
+            </TabsContent>
+          </Tabs>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
