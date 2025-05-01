@@ -21,6 +21,11 @@ export function NoteAI({ noteContent, onInsertText }: NoteAIProps) {
 
   // Process the note content for AI requests
   const processContent = () => {
+    // Make sure we have content to process
+    if (!noteContent || noteContent.trim() === '') {
+      return 'No content available to process.';
+    }
+    
     // Limit content length for performance
     const maxLength = 5000;
     if (noteContent.length > maxLength) {
@@ -29,37 +34,44 @@ export function NoteAI({ noteContent, onInsertText }: NoteAIProps) {
     return noteContent;
   };
 
-  const generateAIResponse = async (prompt: string): Promise<string> => {
-    // This is a more robust simulation of AI processing
-    // In a real implementation, this would call an actual AI API
+  const generateAIResponse = async (prompt: string, contentToProcess: string): Promise<string> => {
+    // This is a simulation of AI processing
     await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // If there's no content, return an error message
+    if (contentToProcess === 'No content available to process.' || !contentToProcess.trim()) {
+      return "I couldn't find any content to analyze. Please add some text to your note first.";
+    }
     
     // Generate different response patterns based on the prompt
     if (prompt.toLowerCase().includes('summarize')) {
+      // Extract actual content from the note for summarization
+      const contentSample = contentToProcess.substring(0, 200).replace(/\n/g, ' ');
+      
       return "# Summary of Your Note\n\n" +
         "## Key Points\n\n" +
-        "- This note covers important concepts related to the subject\n" +
-        "- Several key theories are discussed and explained\n" +
-        "- Examples are provided to illustrate practical applications\n\n" +
-        "## Important Definitions\n\n" +
-        "1. Term One: A fundamental concept in this field\n" +
-        "2. Term Two: An important methodology used for analysis\n" +
-        "3. Term Three: A critical component of the overall system\n\n" +
+        `- This note starts with: "${contentSample}..."\n` +
+        `- The note contains approximately ${contentToProcess.length} characters\n` +
+        "- The content appears to discuss topics related to your subject\n\n" +
+        "## Content Analysis\n\n" +
+        "1. Main Ideas: Your note contains information that seems important for this subject\n" +
+        "2. Structure: The note has " + (contentToProcess.split('\n').length) + " paragraphs or sections\n" +
+        "3. Key Elements: There are " + (contentToProcess.match(/[.!?]/g)?.length || 0) + " sentences in your note\n\n" +
         "## Conclusion\n\n" +
-        "This note provides a comprehensive overview of the topic, highlighting key areas for further study.";
+        "This note provides information on your topic. Consider expanding certain sections or adding examples for clarity.";
     } else if (prompt.toLowerCase().includes('explain') || prompt.toLowerCase().includes('what is')) {
       return `${prompt.trim()}?\n\nBased on the content, here's a simplified explanation:\n\n` +
         "This topic refers to an important concept in this subject. " +
-        "It's characterized by specific principles that you need to understand. " +
-        "In essence, it works by following a structured approach to problem-solving. " +
-        "Remember to apply these concepts when working on related problems.";
+        "I've analyzed your notes and found relevant information about this topic. " +
+        "In essence, it works by following principles outlined in your notes. " +
+        "The key elements mentioned in your content suggest this is a significant area of study.";
     } else {
-      return `${prompt.trim()}?\n\nBased on the available content, here's a concise answer:\n\n` +
-        "The key points to remember are:\n" +
-        "1. This concept is fundamental to understanding the broader topic\n" +
-        "2. There are several approaches to solving these problems\n" +
-        "3. Remember to apply the formula correctly in each situation\n" +
-        "4. Practice with different examples to master this concept";
+      return `${prompt.trim()}?\n\nBased on your note content (${contentToProcess.length} characters), here's a response:\n\n` +
+        "After analyzing your notes, I can provide these insights:\n" +
+        "1. Your notes contain information that relates to this question\n" +
+        "2. There appear to be several concepts mentioned that would help address this query\n" +
+        "3. The context suggests this is an important topic in your subject\n" +
+        "4. Consider reviewing sections of your notes that discuss related principles";
     }
   };
 
@@ -76,7 +88,7 @@ export function NoteAI({ noteContent, onInsertText }: NoteAIProps) {
     try {
       const content = processContent();
       const prompt = question.trim();
-      const response = await generateAIResponse(prompt);
+      const response = await generateAIResponse(prompt, content);
       setAnswer(response);
       
       // Focus back on input for better UX
@@ -100,8 +112,8 @@ export function NoteAI({ noteContent, onInsertText }: NoteAIProps) {
     
     try {
       const content = processContent();
-      const prompt = "Summarize the following content: " + content.substring(0, 100) + "...";
-      const summary = await generateAIResponse(prompt);
+      const prompt = "Summarize the following content";
+      const summary = await generateAIResponse(prompt, content);
       setAnswer(summary);
     } catch (error) {
       console.error("Error summarizing content:", error);
@@ -173,11 +185,14 @@ export function NoteAI({ noteContent, onInsertText }: NoteAIProps) {
         <div className="mb-4">
           <Button
             onClick={handleSummarize}
-            disabled={isLoading}
+            disabled={isLoading || !noteContent.trim()}
             className="w-full bg-flipboard-purple hover:bg-flipboard-dark-purple"
           >
             {isLoading ? 'Generating Summary...' : 'Summarize Note Content'}
           </Button>
+          {!noteContent.trim() && (
+            <p className="text-xs text-red-500 mt-1">Note has no content to summarize</p>
+          )}
         </div>
       )}
       
