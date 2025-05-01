@@ -1,153 +1,199 @@
 
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { 
-  Home, 
-  BookOpen, 
-  LogIn, 
-  User,
-  Menu,
-  X 
-} from 'lucide-react';
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { LogOut, Menu, User, X, BookOpen, Info, FileQuestion } from "lucide-react";
+import { useMobile } from "@/hooks/use-mobile";
 
 export function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const location = useLocation();
-  
-  const isActive = (path: string) => location.pathname === path;
-  const isLoggedIn = localStorage.getItem('flipboard_auth') ? true : false;
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const isMobile = useMobile();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const auth = localStorage.getItem('flipboard_auth');
+    setIsLoggedIn(!!auth);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('flipboard_auth');
+    setIsLoggedIn(false);
+    navigate('/');
+  };
+
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
+  };
 
   return (
-    <header className="w-full bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
-      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-        <Link to="/" className="flex items-center space-x-2">
-          <div className="h-8 w-8 bg-flipboard-purple rounded-md flex items-center justify-center text-white">
-            <BookOpen size={20} className="animate-float" />
-          </div>
-          <span className="font-bold text-xl text-flipboard-dark-bg">Flipboard</span>
-        </Link>
-        
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-6">
-          <Link to="/" className={`hover:text-flipboard-purple transition-colors ${isActive('/') ? 'text-flipboard-purple font-medium' : ''}`}>
-            Home
+    <header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur">
+      <div className="container mx-auto px-4 py-3">
+        <div className="flex items-center justify-between">
+          <Link to="/" className="flex items-center">
+            <span className="text-2xl font-bold text-flipboard-purple">Flipboard</span>
           </Link>
           
-          {isLoggedIn && (
-            <>
-              <Link to="/subjects" className={`hover:text-flipboard-purple transition-colors ${isActive('/subjects') ? 'text-flipboard-purple font-medium' : ''}`}>
-                Subjects
-              </Link>
-              <Link to="/profile" className={`hover:text-flipboard-purple transition-colors ${isActive('/profile') ? 'text-flipboard-purple font-medium' : ''}`}>
-                Profile
-              </Link>
-            </>
-          )}
-
-          {isLoggedIn ? (
-            <Button asChild variant="default" className="bg-flipboard-purple hover:bg-flipboard-dark-purple">
-              <Link to="/subjects">
-                My Notes
-              </Link>
-            </Button>
-          ) : (
-            <div className="flex items-center space-x-3">
-              <Button asChild variant="ghost">
-                <Link to="/signin">
-                  <LogIn size={18} className="mr-1" />
-                  Sign in
-                </Link>
-              </Button>
-              <Button asChild variant="default" className="bg-flipboard-purple hover:bg-flipboard-dark-purple">
-                <Link to="/signup">
-                  <User size={18} className="mr-1" />
-                  Sign up
-                </Link>
-              </Button>
-            </div>
-          )}
-        </nav>
-        
-        {/* Mobile menu button */}
-        <button 
-          className="md:hidden"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-        >
-          {isMenuOpen ? <X /> : <Menu />}
-        </button>
-      </div>
-      
-      {/* Mobile Navigation */}
-      {isMenuOpen && (
-        <nav className="md:hidden p-4 bg-white border-t animate-fade-in">
-          <ul className="space-y-3">
-            <li>
-              <Link 
-                to="/" 
-                className={`flex items-center p-2 rounded-md hover:bg-flipboard-soft-purple transition-colors ${isActive('/') ? 'bg-flipboard-soft-purple text-flipboard-purple font-medium' : ''}`}
-                onClick={() => setIsMenuOpen(false)}
+          {isMobile ? (
+            <div className="flex items-center">
+              <button 
+                onClick={toggleMenu} 
+                className="p-2 text-gray-600 focus:outline-none"
               >
-                <Home size={18} className="mr-2" />
-                Home
+                {menuOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            </div>
+          ) : (
+            <nav className="flex items-center space-x-6">
+              <Link to="/about" className="text-gray-600 hover:text-flipboard-purple transition-colors">
+                About
               </Link>
-            </li>
-            
-            {isLoggedIn && (
-              <>
-                <li>
-                  <Link 
-                    to="/subjects" 
-                    className={`flex items-center p-2 rounded-md hover:bg-flipboard-soft-purple transition-colors ${isActive('/subjects') ? 'bg-flipboard-soft-purple text-flipboard-purple font-medium' : ''}`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <BookOpen size={18} className="mr-2" />
-                    Subjects
+              
+              <Link to="/project-qa" className="text-gray-600 hover:text-flipboard-purple transition-colors flex items-center">
+                <FileQuestion size={16} className="mr-1" />
+                Project Q&A
+              </Link>
+              
+              {isLoggedIn ? (
+                <>
+                  <Link to="/subjects" className="text-gray-600 hover:text-flipboard-purple transition-colors flex items-center">
+                    <BookOpen size={16} className="mr-1" />
+                    My Subjects
                   </Link>
-                </li>
-                <li>
-                  <Link 
-                    to="/profile" 
-                    className={`flex items-center p-2 rounded-md hover:bg-flipboard-soft-purple transition-colors ${isActive('/profile') ? 'bg-flipboard-soft-purple text-flipboard-purple font-medium' : ''}`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <User size={18} className="mr-2" />
-                    Profile
-                  </Link>
-                </li>
-              </>
-            )}
-            
-            {!isLoggedIn && (
-              <>
-                <li>
-                  <Link 
-                    to="/signin" 
-                    className="flex items-center p-2 rounded-md hover:bg-flipboard-soft-purple transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <LogIn size={18} className="mr-2" />
-                    Sign in
-                  </Link>
-                </li>
-                <li>
-                  <Button 
-                    asChild 
-                    variant="default" 
-                    className="w-full bg-flipboard-purple hover:bg-flipboard-dark-purple"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Link to="/signup">
-                      <User size={18} className="mr-2" />
-                      Sign up
+                  
+                  <div className="flex items-center space-x-2">
+                    <Link to="/profile">
+                      <Button variant="ghost" size="sm" className="flex items-center">
+                        <User size={18} className="mr-1" />
+                        <span>Profile</span>
+                      </Button>
                     </Link>
-                  </Button>
-                </li>
-              </>
-            )}
-          </ul>
-        </nav>
-      )}
+                    
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleLogout}
+                      className="flex items-center"
+                    >
+                      <LogOut size={18} className="mr-1" />
+                      <span>Sign Out</span>
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <Link to="/signin">
+                    <Button variant="ghost" size="sm">Sign In</Button>
+                  </Link>
+                  <Link to="/signup">
+                    <Button size="sm" className="bg-flipboard-purple hover:bg-flipboard-purple/90">Sign Up</Button>
+                  </Link>
+                </div>
+              )}
+            </nav>
+          )}
+        </div>
+        
+        {/* Mobile menu */}
+        {isMobile && menuOpen && (
+          <nav className="mt-4 py-2 border-t">
+            <ul className="space-y-2">
+              <li>
+                <Link 
+                  to="/about" 
+                  className="block py-2 px-4 hover:bg-gray-100 rounded text-gray-600"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <div className="flex items-center">
+                    <Info size={16} className="mr-2" />
+                    About
+                  </div>
+                </Link>
+              </li>
+              
+              <li>
+                <Link 
+                  to="/project-qa" 
+                  className="block py-2 px-4 hover:bg-gray-100 rounded text-gray-600"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <div className="flex items-center">
+                    <FileQuestion size={16} className="mr-2" />
+                    Project Q&A
+                  </div>
+                </Link>
+              </li>
+              
+              {isLoggedIn && (
+                <>
+                  <li>
+                    <Link 
+                      to="/subjects" 
+                      className="block py-2 px-4 hover:bg-gray-100 rounded text-gray-600"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <div className="flex items-center">
+                        <BookOpen size={16} className="mr-2" />
+                        My Subjects
+                      </div>
+                    </Link>
+                  </li>
+                  
+                  <li>
+                    <Link 
+                      to="/profile" 
+                      className="block py-2 px-4 hover:bg-gray-100 rounded text-gray-600"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <div className="flex items-center">
+                        <User size={16} className="mr-2" />
+                        Profile
+                      </div>
+                    </Link>
+                  </li>
+                  
+                  <li>
+                    <button 
+                      onClick={() => {
+                        handleLogout();
+                        setMenuOpen(false);
+                      }}
+                      className="flex items-center w-full text-left py-2 px-4 hover:bg-gray-100 rounded text-gray-600"
+                    >
+                      <LogOut size={16} className="mr-2" />
+                      Sign Out
+                    </button>
+                  </li>
+                </>
+              )}
+              
+              {!isLoggedIn && (
+                <>
+                  <li>
+                    <Link 
+                      to="/signin" 
+                      className="block py-2 px-4 hover:bg-gray-100 rounded text-gray-600"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Sign In
+                    </Link>
+                  </li>
+                  
+                  <li>
+                    <Link 
+                      to="/signup" 
+                      className="block py-2 px-4 bg-flipboard-purple text-white rounded"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Sign Up
+                    </Link>
+                  </li>
+                </>
+              )}
+            </ul>
+          </nav>
+        )}
+      </div>
     </header>
   );
 }
