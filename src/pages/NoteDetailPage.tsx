@@ -10,13 +10,14 @@ import {
   ArrowLeft, 
   Edit, 
   Trash2, 
-  Share, 
+  Share,
   Download,
   Search,
   ListTodo
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { downloadNotePdf } from '@/utils/pdfUtils';
+import { ShareMenu } from '@/components/notes/ShareMenu';
 
 interface Note {
   id: string;
@@ -147,10 +148,6 @@ const NoteDetailPage = () => {
     handleSaveNote(updatedNote);
   };
 
-  const handleShare = () => {
-    toast.success('Sharing link copied to clipboard!');
-  };
-
   const handleDownload = () => {
     if (!note || !subject) return;
     
@@ -247,13 +244,10 @@ const NoteDetailPage = () => {
               Download
             </Button>
             
-            <Button
-              variant="outline"
-              onClick={handleShare}
-            >
-              <Share size={18} className="mr-1" />
-              Share
-            </Button>
+            <ShareMenu 
+              note={note}
+              subjectTitle={subject.title}
+            />
             
             <Button
               variant="outline"

@@ -19,6 +19,13 @@ interface Note {
   todos?: Todo[];
 }
 
+export const generateShareableLink = (note: Note) => {
+  // In a real application, this would generate a shareable link,
+  // possibly by calling an API to create a short URL
+  // For now, we'll just return the current URL
+  return window.location.href;
+};
+
 export const downloadNotePdf = (note: Note, subjectTitle?: string) => {
   // Initialize jsPDF
   const doc = new jsPDF();

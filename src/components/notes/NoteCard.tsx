@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Edit, Trash2, Share, Download, ListTodo } from 'lucide-react';
 import { toast } from 'sonner';
 import { downloadNotePdf } from '@/utils/pdfUtils';
+import { ShareMenu } from './ShareMenu';
 
 interface Todo {
   id: string;
@@ -46,13 +47,6 @@ export function NoteCard({ note, subjectId, onEdit, onDelete }: NoteCardProps) {
       day: 'numeric' 
     };
     return new Date(dateString).toLocaleDateString(undefined, options);
-  };
-
-  const handleShare = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // In a real app, this would generate a sharing link
-    toast.success('Sharing link copied to clipboard!');
   };
 
   const handleDownload = (e: React.MouseEvent) => {
@@ -117,14 +111,10 @@ export function NoteCard({ note, subjectId, onEdit, onDelete }: NoteCardProps) {
                 <Edit size={14} />
               </Button>
               
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-7 w-7 p-0"
-                onClick={handleShare}
-              >
-                <Share size={14} />
-              </Button>
+              <ShareMenu 
+                note={note} 
+                compact={true}
+              />
               
               <Button 
                 variant="ghost" 
