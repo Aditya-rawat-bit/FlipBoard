@@ -1,10 +1,11 @@
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Brain } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 
 interface NoteAIProps {
   noteContent: string;
@@ -16,6 +17,51 @@ export function NoteAI({ noteContent, onInsertText }: NoteAIProps) {
   const [answer, setAnswer] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'question' | 'summarize'>('question');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Process the note content for AI requests
+  const processContent = () => {
+    // Limit content length for performance
+    const maxLength = 5000;
+    if (noteContent.length > maxLength) {
+      return noteContent.substring(0, maxLength) + "...";
+    }
+    return noteContent;
+  };
+
+  const generateAIResponse = async (prompt: string): Promise<string> => {
+    // This is a more robust simulation of AI processing
+    // In a real implementation, this would call an actual AI API
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Generate different response patterns based on the prompt
+    if (prompt.toLowerCase().includes('summarize')) {
+      return "# Summary of Your Note\n\n" +
+        "## Key Points\n\n" +
+        "- This note covers important concepts related to the subject\n" +
+        "- Several key theories are discussed and explained\n" +
+        "- Examples are provided to illustrate practical applications\n\n" +
+        "## Important Definitions\n\n" +
+        "1. Term One: A fundamental concept in this field\n" +
+        "2. Term Two: An important methodology used for analysis\n" +
+        "3. Term Three: A critical component of the overall system\n\n" +
+        "## Conclusion\n\n" +
+        "This note provides a comprehensive overview of the topic, highlighting key areas for further study.";
+    } else if (prompt.toLowerCase().includes('explain') || prompt.toLowerCase().includes('what is')) {
+      return `${prompt.trim()}?\n\nBased on the content, here's a simplified explanation:\n\n` +
+        "This topic refers to an important concept in this subject. " +
+        "It's characterized by specific principles that you need to understand. " +
+        "In essence, it works by following a structured approach to problem-solving. " +
+        "Remember to apply these concepts when working on related problems.";
+    } else {
+      return `${prompt.trim()}?\n\nBased on the available content, here's a concise answer:\n\n` +
+        "The key points to remember are:\n" +
+        "1. This concept is fundamental to understanding the broader topic\n" +
+        "2. There are several approaches to solving these problems\n" +
+        "3. Remember to apply the formula correctly in each situation\n" +
+        "4. Practice with different examples to master this concept";
+    }
+  };
 
   const handleQuestionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,26 +74,13 @@ export function NoteAI({ noteContent, onInsertText }: NoteAIProps) {
     setAnswer('');
     
     try {
-      // Simulate AI API call with setTimeout
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      let response = '';
-      if (question.toLowerCase().includes('explain') || question.toLowerCase().includes('what is')) {
-        response = `${question.trim()}?\n\nBased on the content, here's a simplified explanation:\n\n`;
-        response += "This topic refers to an important concept in this subject. ";
-        response += "It's characterized by specific principles that you need to understand. ";
-        response += "In essence, it works by following a structured approach to problem-solving. ";
-        response += "Remember to apply these concepts when working on related problems.";
-      } else {
-        response = `${question.trim()}?\n\nBased on the available content, here's a concise answer:\n\n`;
-        response += "The key points to remember are:\n";
-        response += "1. This concept is fundamental to understanding the broader topic\n";
-        response += "2. There are several approaches to solving these problems\n";
-        response += "3. Remember to apply the formula correctly in each situation\n";
-        response += "4. Practice with different examples to master this concept";
-      }
-      
+      const content = processContent();
+      const prompt = question.trim();
+      const response = await generateAIResponse(prompt);
       setAnswer(response);
+      
+      // Focus back on input for better UX
+      setTimeout(() => inputRef.current?.focus(), 100);
     } catch (error) {
       console.error("Error processing question:", error);
       toast.error("Failed to process your question. Please try again.");
@@ -66,21 +99,9 @@ export function NoteAI({ noteContent, onInsertText }: NoteAIProps) {
     setAnswer('');
     
     try {
-      // Simulate AI API call with setTimeout
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const summary = "# Summary of Your Note\n\n" +
-        "## Key Points\n\n" +
-        "- This note covers important concepts related to the subject\n" +
-        "- Several key theories are discussed and explained\n" +
-        "- Examples are provided to illustrate practical applications\n\n" +
-        "## Important Definitions\n\n" +
-        "1. Term One: A fundamental concept in this field\n" +
-        "2. Term Two: An important methodology used for analysis\n" +
-        "3. Term Three: A critical component of the overall system\n\n" +
-        "## Conclusion\n\n" +
-        "This note provides a comprehensive overview of the topic, highlighting key areas for further study.";
-      
+      const content = processContent();
+      const prompt = "Summarize the following content: " + content.substring(0, 100) + "...";
+      const summary = await generateAIResponse(prompt);
       setAnswer(summary);
     } catch (error) {
       console.error("Error summarizing content:", error);
@@ -100,9 +121,12 @@ export function NoteAI({ noteContent, onInsertText }: NoteAIProps) {
   };
 
   return (
-    <div className="p-4 border rounded-lg bg-white shadow-sm">
+    <Card className="p-4 bg-white shadow-sm">
       <div className="flex justify-between mb-4">
-        <h3 className="font-semibold text-gray-800">AI Assistant</h3>
+        <h3 className="font-semibold text-gray-800 flex items-center">
+          <Brain size={18} className="mr-2 text-flipboard-purple" />
+          AI Assistant
+        </h3>
         
         <div className="flex rounded-md overflow-hidden">
           <Button
@@ -128,6 +152,7 @@ export function NoteAI({ noteContent, onInsertText }: NoteAIProps) {
         <form onSubmit={handleQuestionSubmit} className="mb-4">
           <div className="flex space-x-2">
             <Input
+              ref={inputRef}
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               placeholder="Ask a question about your notes..."
@@ -182,6 +207,6 @@ export function NoteAI({ noteContent, onInsertText }: NoteAIProps) {
           <Loader2 className="h-8 w-8 animate-spin text-flipboard-purple" />
         </div>
       )}
-    </div>
+    </Card>
   );
 }
