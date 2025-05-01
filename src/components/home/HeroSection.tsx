@@ -58,12 +58,6 @@ export function HeroSection() {
                 Get Started
               </Link>
             </Button>
-            
-            <Button asChild variant="outline" size="lg" className="border-white text-white hover:bg-white/20">
-              <a href="#features">
-                Learn More
-              </a>
-            </Button>
           </div>
         </div>
       </div>
