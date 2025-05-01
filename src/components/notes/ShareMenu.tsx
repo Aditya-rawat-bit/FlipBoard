@@ -12,7 +12,7 @@ import {
   Twitter, 
   Linkedin,
   Mail,
-  Whatsapp
+  MessageCircle // Changed from Whatsapp to MessageCircle
 } from "lucide-react";
 import { toast } from "sonner";
 import { generateShareableLink, downloadNotePdf } from "@/utils/pdfUtils";
@@ -103,7 +103,7 @@ export const ShareMenu = ({ note, subjectTitle, compact = false }: ShareMenuProp
             className="w-full justify-start"
             onClick={() => handleShare('whatsapp')}
           >
-            <Whatsapp className="mr-2" size={18} />
+            <MessageCircle className="mr-2" size={18} />
             WhatsApp
           </Button>
           
