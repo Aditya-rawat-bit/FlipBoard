@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut, Menu, User, X, BookOpen, Info, FileQuestion } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -10,15 +10,32 @@ export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const location = useLocation();
 
+  // Check auth status whenever component mounts or location changes
   useEffect(() => {
-    const auth = localStorage.getItem('flipboard_auth');
-    setIsLoggedIn(!!auth);
-  }, []);
+    const checkAuth = () => {
+      const auth = localStorage.getItem('flipboard_auth');
+      setIsLoggedIn(!!auth);
+    };
+
+    checkAuth();
+
+    // Listen for storage changes to update auth status
+    window.addEventListener('storage', checkAuth);
+    
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+    };
+  }, [location.pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem('flipboard_auth');
     setIsLoggedIn(false);
+    
+    // Dispatch a storage event to notify other components
+    window.dispatchEvent(new Event('storage'));
+    
     navigate('/');
   };
 

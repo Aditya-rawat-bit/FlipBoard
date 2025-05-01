@@ -49,28 +49,40 @@ export function AuthForm({ isSignUp = false }: AuthFormProps) {
 
     setIsLoading(true);
     
-    // Supabase integration would go here
-    // For now we'll just simulate authentication
-    setTimeout(() => {
-      try {
-        // Store auth in localStorage temporarily
-        localStorage.setItem('flipboard_auth', JSON.stringify({
-          user: {
-            id: '123',
-            email: formData.email,
-            name: formData.name || 'User'
-          }
-        }));
-        
-        toast.success(`${isSignUp ? 'Sign up' : 'Sign in'} successful`);
-        navigate('/subjects');
-      } catch (error) {
-        console.error('Auth error:', error);
-        toast.error(`Failed to ${isSignUp ? 'sign up' : 'sign in'}`);
-      } finally {
-        setIsLoading(false);
+    try {
+      // Simulate authentication process
+      await new Promise<void>((resolve) => {
+        setTimeout(() => {
+          // Store auth in localStorage
+          localStorage.setItem('flipboard_auth', JSON.stringify({
+            user: {
+              id: 'user_' + Math.random().toString(36).substring(2, 9),
+              email: formData.email,
+              name: formData.name || 'User',
+              createdAt: new Date().toISOString()
+            },
+            token: 'simulated_token_' + Math.random().toString(36).substring(2, 15),
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
+          }));
+          resolve();
+        }, 1500);
+      });
+      
+      // Ensure the auth data is stored correctly
+      const authCheck = localStorage.getItem('flipboard_auth');
+      if (!authCheck) {
+        throw new Error("Failed to store authentication data");
       }
-    }, 1500);
+      
+      toast.success(`${isSignUp ? 'Sign up' : 'Sign in'} successful`);
+      navigate('/subjects');
+    } catch (error) {
+      console.error('Auth error:', error);
+      toast.error(`Failed to ${isSignUp ? 'sign up' : 'sign in'}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      localStorage.removeItem('flipboard_auth'); // Clean up any partial auth data
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
