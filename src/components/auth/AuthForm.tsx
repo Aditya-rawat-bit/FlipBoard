@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,24 @@ interface AuthFormProps {
   isSignUp?: boolean;
 }
 
+// Sample user data to simulate a small database of users
+const DEMO_USERS = [
+  {
+    id: 'user_123456',
+    email: 'test@example.com',
+    password: 'password123',
+    name: 'Test User',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'user_789012',
+    email: 'demo@example.com',
+    password: 'demo123',
+    name: 'Demo User',
+    createdAt: new Date().toISOString()
+  }
+];
+
 export function AuthForm({ isSignUp = false }: AuthFormProps) {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -17,6 +35,18 @@ export function AuthForm({ isSignUp = false }: AuthFormProps) {
     password: '',
     name: ''
   });
+  const [registeredUsers, setRegisteredUsers] = useState<Array<typeof DEMO_USERS[0]>>([]);
+
+  // Initialize registered users from localStorage or default to demo users
+  useEffect(() => {
+    const storedUsers = localStorage.getItem('flipboard_registered_users');
+    if (storedUsers) {
+      setRegisteredUsers(JSON.parse(storedUsers));
+    } else {
+      setRegisteredUsers(DEMO_USERS);
+      localStorage.setItem('flipboard_registered_users', JSON.stringify(DEMO_USERS));
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -50,32 +80,72 @@ export function AuthForm({ isSignUp = false }: AuthFormProps) {
     setIsLoading(true);
     
     try {
-      // Simulate authentication process
-      await new Promise<void>((resolve) => {
-        setTimeout(() => {
-          // Store auth in localStorage
-          localStorage.setItem('flipboard_auth', JSON.stringify({
-            user: {
-              id: 'user_' + Math.random().toString(36).substring(2, 9),
-              email: formData.email,
-              name: formData.name || 'User',
-              createdAt: new Date().toISOString()
-            },
-            token: 'simulated_token_' + Math.random().toString(36).substring(2, 15),
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
-          }));
-          resolve();
-        }, 1500);
-      });
-      
-      // Ensure the auth data is stored correctly
-      const authCheck = localStorage.getItem('flipboard_auth');
-      if (!authCheck) {
-        throw new Error("Failed to store authentication data");
+      if (isSignUp) {
+        // Check if the email is already registered
+        if (registeredUsers.some(user => user.email === formData.email)) {
+          toast.error("This email is already registered");
+          setIsLoading(false);
+          return;
+        }
+
+        // Create a new user
+        const newUser = {
+          id: 'user_' + Math.random().toString(36).substring(2, 9),
+          email: formData.email,
+          password: formData.password, // In a real app, this would be hashed
+          name: formData.name,
+          createdAt: new Date().toISOString()
+        };
+
+        // Add to registered users
+        const updatedUsers = [...registeredUsers, newUser];
+        localStorage.setItem('flipboard_registered_users', JSON.stringify(updatedUsers));
+        
+        // Log the user in
+        localStorage.setItem('flipboard_auth', JSON.stringify({
+          user: {
+            id: newUser.id,
+            email: newUser.email,
+            name: newUser.name,
+            createdAt: newUser.createdAt
+          },
+          token: 'simulated_token_' + Math.random().toString(36).substring(2, 15),
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
+        }));
+
+        toast.success('Sign up successful');
+        navigate('/subjects');
+      } else {
+        // Check if the user exists and password matches
+        const user = registeredUsers.find(user => 
+          user.email === formData.email && user.password === formData.password
+        );
+
+        if (!user) {
+          toast.error("Invalid email or password");
+          setIsLoading(false);
+          return;
+        }
+
+        // Authentication successful, create session
+        localStorage.setItem('flipboard_auth', JSON.stringify({
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            createdAt: user.createdAt
+          },
+          token: 'simulated_token_' + Math.random().toString(36).substring(2, 15),
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
+        }));
+
+        toast.success('Sign in successful');
+        navigate('/subjects');
       }
       
-      toast.success(`${isSignUp ? 'Sign up' : 'Sign in'} successful`);
-      navigate('/subjects');
+      // Dispatch a storage event to notify other components
+      window.dispatchEvent(new Event('storage'));
+
     } catch (error) {
       console.error('Auth error:', error);
       toast.error(`Failed to ${isSignUp ? 'sign up' : 'sign in'}: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -141,6 +211,14 @@ export function AuthForm({ isSignUp = false }: AuthFormProps) {
             required
           />
         </div>
+        
+        {!isSignUp && (
+          <div className="text-sm text-gray-500 mt-2">
+            <p>Demo accounts:</p>
+            <p>test@example.com / password123</p>
+            <p>demo@example.com / demo123</p>
+          </div>
+        )}
         
         <Button 
           type="submit" 
