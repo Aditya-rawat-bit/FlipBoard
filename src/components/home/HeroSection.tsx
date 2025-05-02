@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -35,7 +34,7 @@ export function HeroSection() {
           
           <div className={`flex flex-wrap justify-center gap-4 transform transition-all duration-700 delay-300 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
             <Button asChild size="lg" className="bg-flipboard-purple hover:bg-flipboard-dark-purple text-white px-8 py-6 h-auto rounded">
-              <Link to="/signup">
+              <Link to="/signup" className="mx-0 py-[10px]">
                 Get Started
               </Link>
             </Button>
