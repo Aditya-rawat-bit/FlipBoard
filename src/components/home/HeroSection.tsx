@@ -49,16 +49,5 @@ export function HeroSection() {
           </div>
         </div>
       </div>
-      
-      <div className="mt-24 text-center text-gray-500 text-sm">
-        <p>Trusted by fast-growing companies worldwide</p>
-        <div className="flex justify-center items-center gap-8 mt-6 flex-wrap">
-          {['Mozilla', 'GitHub', '1Password', 'Vercel', 'Netlify'].map((company, index) => (
-            <div key={index} className="text-gray-400 font-medium text-lg">
-              {company}
-            </div>
-          ))}
-        </div>
-      </div>
     </section>;
 }
