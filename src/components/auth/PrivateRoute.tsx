@@ -2,8 +2,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from 'react';
 
 const PrivateRoute = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -14,8 +13,9 @@ const PrivateRoute = () => {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const { data } = await supabase.auth.getSession();
-        setHasSession(!!data.session);
+        // Check for authentication in localStorage
+        const auth = localStorage.getItem('flipboard_auth');
+        setHasSession(!!auth);
       } catch (error) {
         console.error('Error checking session:', error);
       } finally {

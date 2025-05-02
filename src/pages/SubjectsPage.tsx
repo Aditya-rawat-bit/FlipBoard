@@ -9,7 +9,6 @@ import { Input } from '@/components/ui/input';
 import { Plus, Search, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 
 interface Subject {
   id: string;
@@ -28,38 +27,37 @@ const SubjectsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load subjects from Supabase
+  // Load subjects from localStorage
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      navigate('/signin');
+      return;
+    }
 
-    const fetchSubjects = async () => {
+    const fetchSubjects = () => {
       try {
         setIsLoading(true);
         
-        // Fetch subjects
-        const { data: subjectsData, error: subjectsError } = await supabase
-          .from('subjects')
-          .select('*')
-          .order('created_at', { ascending: false });
+        // Fetch subjects from localStorage
+        const savedSubjects = localStorage.getItem('flipboard_subjects');
+        let subjectsData = [];
         
-        if (subjectsError) throw subjectsError;
+        if (savedSubjects) {
+          subjectsData = JSON.parse(savedSubjects);
+        } else {
+          // Initialize with empty array if no subjects exist yet
+          subjectsData = [];
+          localStorage.setItem('flipboard_subjects', JSON.stringify(subjectsData));
+        }
         
-        // Fetch note counts for each subject
-        const subjectsWithCounts = await Promise.all(
-          (subjectsData || []).map(async (subject) => {
-            const { count, error: countError } = await supabase
-              .from('notes')
-              .select('*', { count: 'exact', head: true })
-              .eq('subject_id', subject.id);
-            
-            if (countError) {
-              console.error('Error fetching note count:', countError);
-              return { ...subject, notesCount: 0 };
-            }
-            
-            return { ...subject, notesCount: count || 0 };
-          })
-        );
+        // Get note counts for each subject
+        const savedNotes = localStorage.getItem('flipboard_notes');
+        const allNotes = savedNotes ? JSON.parse(savedNotes) : {};
+        
+        const subjectsWithCounts = subjectsData.map(subject => {
+          const notesCount = allNotes[subject.id]?.length || 0;
+          return { ...subject, notesCount };
+        });
         
         setSubjects(subjectsWithCounts);
       } catch (error) {
@@ -71,7 +69,7 @@ const SubjectsPage = () => {
     };
     
     fetchSubjects();
-  }, [user]);
+  }, [user, navigate]);
 
   const handleCreateSubject = () => {
     setEditingSubject(null);
@@ -83,28 +81,24 @@ const SubjectsPage = () => {
     setIsFormOpen(true);
   };
 
-  const handleDeleteSubject = async (id: string) => {
+  const handleDeleteSubject = (id: string) => {
     try {
       const confirmDelete = window.confirm('Are you sure you want to delete this subject? All associated notes will be lost.');
       if (!confirmDelete) return;
       
-      // First, delete all notes associated with this subject
-      const { error: notesDeleteError } = await supabase
-        .from('notes')
-        .delete()
-        .eq('subject_id', id);
+      // Remove the subject from localStorage
+      const filteredSubjects = subjects.filter(subject => subject.id !== id);
+      localStorage.setItem('flipboard_subjects', JSON.stringify(filteredSubjects));
       
-      if (notesDeleteError) throw notesDeleteError;
+      // Remove all notes for this subject
+      const savedNotes = localStorage.getItem('flipboard_notes');
+      if (savedNotes) {
+        const allNotes = JSON.parse(savedNotes);
+        delete allNotes[id];
+        localStorage.setItem('flipboard_notes', JSON.stringify(allNotes));
+      }
       
-      // Then delete the subject
-      const { error: subjectDeleteError } = await supabase
-        .from('subjects')
-        .delete()
-        .eq('id', id);
-      
-      if (subjectDeleteError) throw subjectDeleteError;
-      
-      setSubjects(prev => prev.filter(subject => subject.id !== id));
+      setSubjects(filteredSubjects);
       toast.success('Subject deleted successfully');
     } catch (error) {
       console.error('Error deleting subject:', error);
@@ -112,43 +106,28 @@ const SubjectsPage = () => {
     }
   };
 
-  const handleSaveSubject = async (subjectData: Subject) => {
+  const handleSaveSubject = (subjectData: Subject) => {
     try {
       if (editingSubject) {
         // Update existing subject
-        const { error } = await supabase
-          .from('subjects')
-          .update({
-            name: subjectData.name,
-            description: subjectData.description,
-            color: subjectData.color,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', subjectData.id);
-        
-        if (error) throw error;
-        
-        setSubjects(prev => prev.map(subject => 
+        const updatedSubjects = subjects.map(subject => 
           subject.id === subjectData.id ? { ...subjectData, notesCount: subject.notesCount } : subject
-        ));
+        );
         
+        localStorage.setItem('flipboard_subjects', JSON.stringify(updatedSubjects));
+        setSubjects(updatedSubjects);
         toast.success('Subject updated successfully');
       } else {
         // Create new subject
-        const { data, error } = await supabase
-          .from('subjects')
-          .insert({
-            name: subjectData.name,
-            description: subjectData.description,
-            color: subjectData.color,
-            user_id: user?.id
-          })
-          .select()
-          .single();
+        const newSubject = {
+          ...subjectData,
+          id: `subject_${Date.now()}`, // Generate unique ID
+          notesCount: 0,
+        };
         
-        if (error) throw error;
-        
-        setSubjects(prev => [{ ...data, notesCount: 0 }, ...prev]);
+        const updatedSubjects = [newSubject, ...subjects];
+        localStorage.setItem('flipboard_subjects', JSON.stringify(updatedSubjects));
+        setSubjects(updatedSubjects);
         toast.success('Subject created successfully');
       }
     } catch (error: any) {

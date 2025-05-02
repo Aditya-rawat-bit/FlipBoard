@@ -100,10 +100,15 @@ const NotesPage = () => {
     const savedSubjects = localStorage.getItem('flipboard_subjects');
     if (savedSubjects) {
       const subjects = JSON.parse(savedSubjects);
-      const currentSubject = subjects.find((s: Subject) => s.id === subjectId);
+      const currentSubject = subjects.find((s: any) => s.id === subjectId);
       
       if (currentSubject) {
-        setSubject(currentSubject);
+        setSubject({
+          id: currentSubject.id,
+          title: currentSubject.name,
+          description: currentSubject.description || '',
+          color: currentSubject.color
+        });
       } else {
         navigate('/subjects');
         toast.error('Subject not found');
@@ -141,7 +146,7 @@ const NotesPage = () => {
       const savedSubjects = localStorage.getItem('flipboard_subjects');
       if (savedSubjects) {
         const subjects = JSON.parse(savedSubjects);
-        const updatedSubjects = subjects.map((s: Subject) => {
+        const updatedSubjects = subjects.map((s: any) => {
           if (s.id === subjectId) {
             return { ...s, notesCount: notes.length };
           }
@@ -181,6 +186,8 @@ const NotesPage = () => {
       // Create new note
       setNotes(prev => [...prev, noteData]);
     }
+    
+    setIsFormOpen(false);
   };
 
   const filteredNotes = notes.filter(note => 
