@@ -1,6 +1,6 @@
 
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
 
 // Pages
@@ -17,7 +17,7 @@ import ProjectQA from "./assets/project-q-and-a";
 
 function App() {
   return (
-    <Router>
+    <>
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Index />} />
@@ -36,7 +36,7 @@ function App() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster position="bottom-right" />
-    </Router>
+    </>
   );
 }
 

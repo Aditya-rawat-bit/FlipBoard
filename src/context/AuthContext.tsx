@@ -1,13 +1,16 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
+interface AuthUser {
+  id: string;
+  email: string;
+  name?: string;
+}
+
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
+  user: AuthUser | null;
   isLoading: boolean;
   signUp: (email: string, password: string, userData?: { full_name?: string }) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
@@ -18,82 +21,88 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        console.log("Auth state changed:", event, currentSession?.user?.email);
-        
-        if (currentSession) {
-          setSession(currentSession);
-          setUser(currentSession.user ?? null);
+    const checkAuth = () => {
+      try {
+        const auth = localStorage.getItem('flipboard_auth');
+        if (auth) {
+          const authData = JSON.parse(auth);
+          setUser(authData.user);
         } else {
-          setSession(null);
           setUser(null);
         }
-        
-        if (event === 'SIGNED_IN') {
-          toast.success('Signed in successfully');
-        } else if (event === 'SIGNED_OUT') {
-          toast.success('Signed out successfully');
-          navigate('/');
-        }
-
-        setIsLoading(false);
-      }
-    );
-
-    // THEN check for existing session
-    const checkSession = async () => {
-      try {
-        console.log("Checking for existing session...");
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        console.log("Session check result:", currentSession?.user?.email || "No session");
-        
-        if (currentSession) {
-          setSession(currentSession);
-          setUser(currentSession.user ?? null);
-        }
       } catch (error) {
-        console.error('Error checking session:', error);
+        console.error('Error parsing auth data:', error);
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
     };
-
-    checkSession();
-
+    
+    // Check on initial load
+    checkAuth();
+    
+    // Listen for storage changes
+    window.addEventListener('storage', checkAuth);
+    
+    // Custom event for auth changes within the same page
+    window.addEventListener('authChange', checkAuth);
+    
     return () => {
-      subscription.unsubscribe();
+      window.removeEventListener('storage', checkAuth);
+      window.removeEventListener('authChange', checkAuth);
     };
-  }, [navigate]);
+  }, []);
 
   const signUp = async (email: string, password: string, userData?: { full_name?: string }) => {
     try {
       setIsLoading(true);
-      const { error, data } = await supabase.auth.signUp({ 
-        email, 
-        password,
-        options: {
-          data: {
-            full_name: userData?.full_name || '',
-          }
+      
+      // Get existing users or start with defaults
+      const storedUsers = localStorage.getItem('flipboard_registered_users');
+      let users = storedUsers ? JSON.parse(storedUsers) : [
+        {
+          id: 'user_123456',
+          email: 'test@example.com',
+          password: 'password123',
+          name: 'Test User',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 'user_789012',
+          email: 'demo@example.com',
+          password: 'demo123',
+          name: 'Demo User',
+          createdAt: new Date().toISOString()
         }
-      });
+      ];
       
-      if (error) throw error;
-      
-      if (data.user) {
-        toast.success('Registration successful! Please check your email for confirmation.');
-        navigate('/signin');
+      // Check if email exists already
+      if (users.some((user: any) => user.email === email)) {
+        toast.error('This email is already registered');
+        throw new Error('This email is already registered');
       }
+      
+      // Add new user
+      const newUser = {
+        id: 'user_' + Math.random().toString(36).substring(2, 9),
+        email: email,
+        password: password,
+        name: userData?.full_name || '',
+        createdAt: new Date().toISOString()
+      };
+      
+      users.push(newUser);
+      localStorage.setItem('flipboard_registered_users', JSON.stringify(users));
+      
+      toast.success('Account created successfully!');
+      navigate('/signin');
     } catch (error: any) {
-      toast.error(error.message || 'An error occurred during sign up');
+      toast.error(error.message || 'Failed to create account');
       throw error;
     } finally {
       setIsLoading(false);
@@ -103,13 +112,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
       
-      if (error) throw error;
-
-      // Don't navigate here - let the auth state listener handle it
+      // Get registered users from localStorage
+      const storedUsers = localStorage.getItem('flipboard_registered_users');
+      const users = storedUsers ? JSON.parse(storedUsers) : [];
+      
+      // Find matching user
+      const user = users.find((u: any) => 
+        u.email === email && u.password === password
+      );
+      
+      if (!user) {
+        toast.error("Invalid login credentials");
+        throw new Error("Invalid login credentials");
+      }
+      
+      // Create session
+      const authData = {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name || '',
+        },
+        authenticated: true,
+        timestamp: Date.now()
+      };
+      
+      localStorage.setItem('flipboard_auth', JSON.stringify(authData));
+      setUser(authData.user);
+      
+      // Dispatch auth change event
+      window.dispatchEvent(new Event('authChange'));
+      
+      toast.success('Signed in successfully');
+      navigate('/subjects');
     } catch (error: any) {
-      toast.error(error.message || 'Invalid login credentials');
+      console.error("Login error:", error);
+      toast.error(error.message || 'Failed to sign in');
       throw error;
     } finally {
       setIsLoading(false);
@@ -119,10 +158,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      localStorage.removeItem('flipboard_auth');
+      setUser(null);
       
-      // No need to navigate here, the auth state listener will handle it
+      // Dispatch auth change event
+      window.dispatchEvent(new Event('authChange'));
+      
+      toast.success('Signed out successfully');
+      navigate('/');
     } catch (error: any) {
       toast.error(error.message || 'Error signing out');
     } finally {
@@ -132,7 +175,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = {
     user,
-    session,
     isLoading,
     signUp,
     signIn,
