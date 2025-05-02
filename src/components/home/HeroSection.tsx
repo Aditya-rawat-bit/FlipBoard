@@ -1,12 +1,16 @@
+
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Github } from 'lucide-react';
+
 export function HeroSection() {
   const [isVisible, setIsVisible] = useState(false);
+  
   useEffect(() => {
     setIsVisible(true);
   }, []);
+  
   return <section className="bg-white text-black py-32 md:py-40 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden">
         {Array.from({
@@ -49,7 +53,11 @@ export function HeroSection() {
       <div className="mt-24 text-center text-gray-500 text-sm">
         <p>Trusted by fast-growing companies worldwide</p>
         <div className="flex justify-center items-center gap-8 mt-6 flex-wrap">
-          {['Mozilla', 'GitHub', '1Password', 'Vercel', 'Netlify'].map(company => {})}
+          {['Mozilla', 'GitHub', '1Password', 'Vercel', 'Netlify'].map((company, index) => (
+            <div key={index} className="text-gray-400 font-medium text-lg">
+              {company}
+            </div>
+          ))}
         </div>
       </div>
     </section>;
