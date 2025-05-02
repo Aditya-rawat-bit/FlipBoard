@@ -19,32 +19,30 @@ import ProjectQA from "./assets/project-q-and-a";
 
 function App() {
   return (
-    <React.StrictMode>
-      <Router>
-        <AuthProvider>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/signin" element={<SignIn />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/project-qa" element={<ProjectQA />} />
-            
-            {/* Protected routes */}
-            <Route element={<PrivateRoute />}>
-              <Route path="/subjects" element={<SubjectsPage />} />
-              <Route path="/subjects/:subjectId" element={<NotesPage />} />
-              <Route path="/subjects/:subjectId/notes/:noteId" element={<NoteDetailPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-            </Route>
-            
-            {/* 404 route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-        <Toaster position="bottom-right" />
-      </Router>
-    </React.StrictMode>
+    <Router>
+      <AuthProvider>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<Index />} />
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/project-qa" element={<ProjectQA />} />
+          
+          {/* Protected routes */}
+          <Route element={<PrivateRoute />}>
+            <Route path="/subjects" element={<SubjectsPage />} />
+            <Route path="/subjects/:subjectId" element={<NotesPage />} />
+            <Route path="/subjects/:subjectId/notes/:noteId" element={<NoteDetailPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+          </Route>
+          
+          {/* 404 route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </AuthProvider>
+      <Toaster position="bottom-right" />
+    </Router>
   );
 }
 
