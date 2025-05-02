@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -138,10 +137,18 @@ const SubjectsPage = () => {
     }
   };
 
-  const filteredSubjects = subjects.filter(subject => 
-    subject.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (subject.description?.toLowerCase() || '').includes(searchQuery.toLowerCase())
-  );
+  // Fix the filtering to handle undefined values properly
+  const filteredSubjects = subjects.filter(subject => {
+    // Make sure name exists before calling toLowerCase
+    const nameMatch = subject.name ? 
+      subject.name.toLowerCase().includes((searchQuery || '').toLowerCase()) : false;
+    
+    // Make sure description exists before calling toLowerCase
+    const descriptionMatch = subject.description ? 
+      subject.description.toLowerCase().includes((searchQuery || '').toLowerCase()) : false;
+    
+    return nameMatch || descriptionMatch;
+  });
 
   return (
     <MainLayout>
