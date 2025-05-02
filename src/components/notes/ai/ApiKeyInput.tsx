@@ -2,6 +2,7 @@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Key } from 'lucide-react';
+import { useState } from 'react';
 
 interface ApiKeyInputProps {
   apiKey: string;
@@ -10,6 +11,8 @@ interface ApiKeyInputProps {
 }
 
 export function ApiKeyInput({ apiKey, setApiKey, onSave }: ApiKeyInputProps) {
+  const [showKey, setShowKey] = useState(false);
+  
   return (
     <div className="mb-4">
       <div className="mb-2 text-sm">
@@ -20,7 +23,7 @@ export function ApiKeyInput({ apiKey, setApiKey, onSave }: ApiKeyInputProps) {
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
           placeholder="Paste your Groq API key here..."
-          type="password"
+          type={showKey ? "text" : "password"}
           className="flex-1"
         />
         <Button 
@@ -31,9 +34,17 @@ export function ApiKeyInput({ apiKey, setApiKey, onSave }: ApiKeyInputProps) {
           Save Key
         </Button>
       </div>
-      <p className="mt-2 text-xs text-gray-500">
-        You can get an API key from <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="text-flipboard-purple">Groq's console</a>
-      </p>
+      <div className="flex justify-between mt-2">
+        <p className="text-xs text-gray-500">
+          Get an API key from <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="text-flipboard-purple">Groq's console</a>
+        </p>
+        <button 
+          onClick={() => setShowKey(!showKey)} 
+          className="text-xs text-flipboard-purple"
+        >
+          {showKey ? 'Hide key' : 'Show key'}
+        </button>
+      </div>
     </div>
   );
 }

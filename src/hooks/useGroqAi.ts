@@ -82,6 +82,7 @@ export function useGroqAi() {
     isLoading,
     setIsLoading,
     generateAIResponse,
-    processContent
+    processContent,
+    hasApiKey: Boolean(apiKey)
   };
 }

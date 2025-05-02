@@ -18,7 +18,7 @@ export function NoteAI({ noteContent, onInsertText }: NoteAIProps) {
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const [activeTab, setActiveTab] = useState<'question' | 'summarize'>('question');
-  const [showApiInput, setShowApiInput] = useState(!localStorage.getItem('groq_api_key'));
+  const [showApiInput, setShowApiInput] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   
   const { 
@@ -27,8 +27,14 @@ export function NoteAI({ noteContent, onInsertText }: NoteAIProps) {
     isLoading, 
     setIsLoading, 
     generateAIResponse, 
-    processContent 
+    processContent,
+    hasApiKey
   } = useGroqAi();
+
+  // Check initially if we need to show the API input
+  useEffect(() => {
+    setShowApiInput(!hasApiKey);
+  }, [hasApiKey]);
 
   const handleApiKeySave = () => {
     if (!apiKey.trim()) {
@@ -36,7 +42,6 @@ export function NoteAI({ noteContent, onInsertText }: NoteAIProps) {
       return;
     }
     
-    localStorage.setItem('groq_api_key', apiKey);
     toast.success("API key saved successfully");
     setShowApiInput(false);
   };
@@ -173,7 +178,7 @@ export function NoteAI({ noteContent, onInsertText }: NoteAIProps) {
         onAddToNotes={handleAddToNotes} 
       />
       
-      {!showApiInput && (
+      {!showApiInput && hasApiKey && (
         <div className="mt-4 text-center">
           <button
             onClick={() => setShowApiInput(true)}
