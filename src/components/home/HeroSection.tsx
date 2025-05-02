@@ -12,12 +12,12 @@ export function HeroSection() {
   }, []);
 
   return (
-    <section className="bg-black text-white py-32 md:py-40 relative overflow-hidden">
+    <section className="bg-white text-black py-32 md:py-40 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden">
         {Array.from({ length: 15 }).map((_, i) => (
           <div 
             key={i}
-            className="absolute opacity-10 rounded-full border border-white/10 shadow-xl animate-float"
+            className="absolute opacity-10 rounded-full border border-black/10 shadow-xl animate-float"
             style={{
               width: `${Math.random() * 200 + 50}px`,
               height: `${Math.random() * 200 + 50}px`,
@@ -36,11 +36,11 @@ export function HeroSection() {
             className={`text-5xl md:text-7xl font-bold mb-6 leading-tight transform transition-all duration-700 delay-100 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}
           >
             Build in a weekend
-            <span className="block text-emerald-400">Scale to millions</span>
+            <span className="block text-flipboard-purple">Scale to millions</span>
           </h1>
           
           <p 
-            className={`text-lg md:text-xl mb-10 max-w-2xl mx-auto text-white/80 transform transition-all duration-700 delay-200 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}
+            className={`text-lg md:text-xl mb-10 max-w-2xl mx-auto text-gray-600 transform transition-all duration-700 delay-200 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}
           >
             Your digital notebook where ideas stick. Create, organize and share your notes with powerful AI features to enhance your learning.
           </p>
@@ -48,13 +48,13 @@ export function HeroSection() {
           <div 
             className={`flex flex-wrap justify-center gap-4 transform transition-all duration-700 delay-300 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}
           >
-            <Button asChild size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-6 h-auto rounded">
+            <Button asChild size="lg" className="bg-flipboard-purple hover:bg-flipboard-dark-purple text-white px-8 py-6 h-auto rounded">
               <Link to="/signup">
                 Get Started
               </Link>
             </Button>
 
-            <Button asChild variant="outline" size="lg" className="border-gray-700 bg-black text-white hover:bg-gray-900 px-8 py-6 h-auto rounded flex items-center gap-2">
+            <Button asChild variant="outline" size="lg" className="border-gray-300 bg-white text-gray-800 hover:bg-gray-100 px-8 py-6 h-auto rounded flex items-center gap-2">
               <a href="https://github.com" target="_blank" rel="noopener noreferrer">
                 <Github size={20} />
                 <span>GitHub</span>
@@ -64,7 +64,7 @@ export function HeroSection() {
         </div>
       </div>
       
-      <div className="mt-24 text-center text-white/50 text-sm">
+      <div className="mt-24 text-center text-gray-500 text-sm">
         <p>Trusted by fast-growing companies worldwide</p>
         <div className="flex justify-center items-center gap-8 mt-6 flex-wrap">
           {['Mozilla', 'GitHub', '1Password', 'Vercel', 'Netlify'].map((company) => (
