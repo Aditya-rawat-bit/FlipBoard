@@ -49,9 +49,7 @@ export function HeroSection() {
       <div className="mt-24 text-center text-gray-500 text-sm">
         <p>Trusted by fast-growing companies worldwide</p>
         <div className="flex justify-center items-center gap-8 mt-6 flex-wrap">
-          {['Mozilla', 'GitHub', '1Password', 'Vercel', 'Netlify'].map(company => <span key={company} className="opacity-50 hover:opacity-80 transition-opacity">
-              {company}
-            </span>)}
+          {['Mozilla', 'GitHub', '1Password', 'Vercel', 'Netlify'].map(company => {})}
         </div>
       </div>
     </section>;
