@@ -27,6 +27,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
+        console.log("Auth state changed:", event, currentSession?.user?.email);
+        
         if (currentSession) {
           setSession(currentSession);
           setUser(currentSession.user ?? null);
@@ -39,16 +41,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           toast.success('Signed in successfully');
         } else if (event === 'SIGNED_OUT') {
           toast.success('Signed out successfully');
+          navigate('/');
         }
+
+        setIsLoading(false);
       }
     );
 
     // THEN check for existing session
     const checkSession = async () => {
       try {
+        console.log("Checking for existing session...");
         const { data: { session: currentSession } } = await supabase.auth.getSession();
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
+        console.log("Session check result:", currentSession?.user?.email || "No session");
+        
+        if (currentSession) {
+          setSession(currentSession);
+          setUser(currentSession.user ?? null);
+        }
       } catch (error) {
         console.error('Error checking session:', error);
       } finally {
@@ -61,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
 
   const signUp = async (email: string, password: string, userData?: { full_name?: string }) => {
     try {
@@ -97,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (error) throw error;
 
-      navigate('/subjects');
+      // Don't navigate here - let the auth state listener handle it
     } catch (error: any) {
       toast.error(error.message || 'Invalid login credentials');
       throw error;
@@ -111,7 +121,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      navigate('/');
+      
+      // No need to navigate here, the auth state listener will handle it
     } catch (error: any) {
       toast.error(error.message || 'Error signing out');
     } finally {
