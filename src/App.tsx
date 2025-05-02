@@ -1,4 +1,5 @@
 
+import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AuthProvider } from "./context/AuthContext";
@@ -18,7 +19,7 @@ import ProjectQA from "./assets/project-q-and-a";
 
 function App() {
   return (
-    <>
+    <React.StrictMode>
       <Router>
         <AuthProvider>
           <Routes>
@@ -41,9 +42,9 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
+        <Toaster position="bottom-right" />
       </Router>
-      <Toaster position="bottom-right" />
-    </>
+    </React.StrictMode>
   );
 }
 
