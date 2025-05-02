@@ -1,14 +1,29 @@
+
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Github } from 'lucide-react';
+
 export function HeroSection() {
   const [isVisible, setIsVisible] = useState(false);
+  
   useEffect(() => {
     setIsVisible(true);
   }, []);
+  
   return <section className="bg-white text-black py-32 md:py-40 relative overflow-hidden">
-      
+      <div className="absolute inset-0 overflow-hidden">
+        {Array.from({
+        length: 15
+      }).map((_, i) => <div key={i} className="absolute opacity-10 rounded-full border border-black/10 shadow-xl animate-float" style={{
+        width: `${Math.random() * 200 + 50}px`,
+        height: `${Math.random() * 200 + 50}px`,
+        top: `${Math.random() * 100}%`,
+        left: `${Math.random() * 100}%`,
+        animationDelay: `${Math.random() * 5}s`
+      }}>
+          </div>)}
+      </div>
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
@@ -35,6 +50,15 @@ export function HeroSection() {
         </div>
       </div>
       
-      
+      <div className="mt-24 text-center text-gray-500 text-sm">
+        <p>Trusted by fast-growing companies worldwide</p>
+        <div className="flex justify-center items-center gap-8 mt-6 flex-wrap">
+          {['Mozilla', 'GitHub', '1Password', 'Vercel', 'Netlify'].map((company, index) => (
+            <div key={index} className="text-gray-400 font-medium text-lg">
+              {company}
+            </div>
+          ))}
+        </div>
+      </div>
     </section>;
 }
