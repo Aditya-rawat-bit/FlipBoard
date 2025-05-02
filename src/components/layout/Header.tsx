@@ -1,42 +1,20 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut, Menu, User, X, BookOpen, Info, FileQuestion } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/context/AuthContext";
 
 export function Header() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Check auth status whenever component mounts or location changes
-  useEffect(() => {
-    const checkAuth = () => {
-      const auth = localStorage.getItem('flipboard_auth');
-      setIsLoggedIn(!!auth);
-    };
-
-    checkAuth();
-
-    // Listen for storage changes to update auth status
-    window.addEventListener('storage', checkAuth);
-    
-    return () => {
-      window.removeEventListener('storage', checkAuth);
-    };
-  }, [location.pathname]);
+  const { user, isAuthenticated, signOut } = useAuth();
 
   const handleLogout = () => {
-    localStorage.removeItem('flipboard_auth');
-    setIsLoggedIn(false);
-    
-    // Dispatch a storage event to notify other components
-    window.dispatchEvent(new Event('storage'));
-    
-    navigate('/');
+    signOut();
   };
 
   const toggleMenu = () => {
@@ -71,7 +49,7 @@ export function Header() {
                 Project Q&A
               </Link>
               
-              {isLoggedIn ? (
+              {isAuthenticated ? (
                 <>
                   <Link to="/subjects" className="text-gray-600 hover:text-flipboard-purple transition-colors flex items-center">
                     <BookOpen size={16} className="mr-1" />
@@ -82,7 +60,7 @@ export function Header() {
                     <Link to="/profile">
                       <Button variant="ghost" size="sm" className="flex items-center">
                         <User size={18} className="mr-1" />
-                        <span>Profile</span>
+                        <span>{user?.user_metadata?.full_name || 'Profile'}</span>
                       </Button>
                     </Link>
                     
@@ -141,7 +119,7 @@ export function Header() {
                 </Link>
               </li>
               
-              {isLoggedIn && (
+              {isAuthenticated && (
                 <>
                   <li>
                     <Link 
@@ -184,7 +162,7 @@ export function Header() {
                 </>
               )}
               
-              {!isLoggedIn && (
+              {!isAuthenticated && (
                 <>
                   <li>
                     <Link 

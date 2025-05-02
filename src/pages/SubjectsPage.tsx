@@ -6,72 +6,72 @@ import { SubjectCard } from '@/components/subjects/SubjectCard';
 import { SubjectForm } from '@/components/subjects/SubjectForm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Subject {
   id: string;
-  title: string;
-  description: string;
-  notesCount: number;
-  color?: string;
+  name: string;
+  description: string | null;
+  color: string;
+  notesCount?: number;
 }
-
-// Sample initial data
-const initialSubjects = [
-  {
-    id: "subject_1",
-    title: "Mathematics",
-    description: "Calculus, Algebra, and Statistics",
-    notesCount: 5,
-    color: "bg-flipboard-soft-purple"
-  },
-  {
-    id: "subject_2",
-    title: "Physics",
-    description: "Classical Mechanics and Electromagnetism",
-    notesCount: 3,
-    color: "bg-flipboard-soft-pink"
-  },
-  {
-    id: "subject_3",
-    title: "Computer Science",
-    description: "Programming, Data Structures and Algorithms",
-    notesCount: 7,
-    color: "bg-flipboard-soft-blue"
-  },
-];
 
 const SubjectsPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Check if user is authenticated
+  // Load subjects from Supabase
   useEffect(() => {
-    const auth = localStorage.getItem('flipboard_auth');
-    if (!auth) {
-      navigate('/signin');
-      toast.error('Please sign in to access your subjects');
-    } else {
-      // Load subjects from localStorage or use initial data
-      const savedSubjects = localStorage.getItem('flipboard_subjects');
-      if (savedSubjects) {
-        setSubjects(JSON.parse(savedSubjects));
-      } else {
-        setSubjects(initialSubjects);
+    if (!user) return;
+
+    const fetchSubjects = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Fetch subjects
+        const { data: subjectsData, error: subjectsError } = await supabase
+          .from('subjects')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (subjectsError) throw subjectsError;
+        
+        // Fetch note counts for each subject
+        const subjectsWithCounts = await Promise.all(
+          (subjectsData || []).map(async (subject) => {
+            const { count, error: countError } = await supabase
+              .from('notes')
+              .select('*', { count: 'exact', head: true })
+              .eq('subject_id', subject.id);
+            
+            if (countError) {
+              console.error('Error fetching note count:', countError);
+              return { ...subject, notesCount: 0 };
+            }
+            
+            return { ...subject, notesCount: count || 0 };
+          })
+        );
+        
+        setSubjects(subjectsWithCounts);
+      } catch (error) {
+        console.error('Error loading subjects:', error);
+        toast.error('Failed to load subjects');
+      } finally {
+        setIsLoading(false);
       }
-    }
-  }, [navigate]);
-
-  // Save subjects to localStorage whenever they change
-  useEffect(() => {
-    if (subjects.length > 0) {
-      localStorage.setItem('flipboard_subjects', JSON.stringify(subjects));
-    }
-  }, [subjects]);
+    };
+    
+    fetchSubjects();
+  }, [user]);
 
   const handleCreateSubject = () => {
     setEditingSubject(null);
@@ -83,29 +83,85 @@ const SubjectsPage = () => {
     setIsFormOpen(true);
   };
 
-  const handleDeleteSubject = (id: string) => {
-    const confirmDelete = window.confirm('Are you sure you want to delete this subject? All notes will be lost.');
-    if (confirmDelete) {
+  const handleDeleteSubject = async (id: string) => {
+    try {
+      const confirmDelete = window.confirm('Are you sure you want to delete this subject? All associated notes will be lost.');
+      if (!confirmDelete) return;
+      
+      // First, delete all notes associated with this subject
+      const { error: notesDeleteError } = await supabase
+        .from('notes')
+        .delete()
+        .eq('subject_id', id);
+      
+      if (notesDeleteError) throw notesDeleteError;
+      
+      // Then delete the subject
+      const { error: subjectDeleteError } = await supabase
+        .from('subjects')
+        .delete()
+        .eq('id', id);
+      
+      if (subjectDeleteError) throw subjectDeleteError;
+      
       setSubjects(prev => prev.filter(subject => subject.id !== id));
       toast.success('Subject deleted successfully');
+    } catch (error) {
+      console.error('Error deleting subject:', error);
+      toast.error('Failed to delete subject');
     }
   };
 
-  const handleSaveSubject = (subjectData: Subject) => {
-    if (editingSubject) {
-      // Update existing subject
-      setSubjects(prev => prev.map(subject => 
-        subject.id === subjectData.id ? subjectData : subject
-      ));
-    } else {
-      // Create new subject
-      setSubjects(prev => [...prev, { ...subjectData, notesCount: 0 }]);
+  const handleSaveSubject = async (subjectData: Subject) => {
+    try {
+      if (editingSubject) {
+        // Update existing subject
+        const { error } = await supabase
+          .from('subjects')
+          .update({
+            name: subjectData.name,
+            description: subjectData.description,
+            color: subjectData.color,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', subjectData.id);
+        
+        if (error) throw error;
+        
+        setSubjects(prev => prev.map(subject => 
+          subject.id === subjectData.id ? { ...subjectData, notesCount: subject.notesCount } : subject
+        ));
+        
+        toast.success('Subject updated successfully');
+      } else {
+        // Create new subject
+        const { data, error } = await supabase
+          .from('subjects')
+          .insert({
+            name: subjectData.name,
+            description: subjectData.description,
+            color: subjectData.color,
+            user_id: user?.id
+          })
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        setSubjects(prev => [{ ...data, notesCount: 0 }, ...prev]);
+        toast.success('Subject created successfully');
+      }
+    } catch (error: any) {
+      console.error('Error saving subject:', error);
+      toast.error(`Failed to save subject: ${error.message}`);
+    } finally {
+      setIsFormOpen(false);
     }
   };
 
   const filteredSubjects = subjects.filter(subject => 
-    subject.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    subject.description.toLowerCase().includes(searchQuery.toLowerCase())
+    subject.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (subject.description?.toLowerCase() || '').includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -138,12 +194,22 @@ const SubjectsPage = () => {
           </div>
         </div>
         
-        {filteredSubjects.length > 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center items-center py-16">
+            <Loader2 className="h-8 w-8 text-flipboard-purple animate-spin" />
+          </div>
+        ) : filteredSubjects.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredSubjects.map(subject => (
               <SubjectCard 
                 key={subject.id} 
-                subject={subject}
+                subject={{
+                  id: subject.id,
+                  title: subject.name,
+                  description: subject.description || '',
+                  notesCount: subject.notesCount || 0,
+                  color: subject.color
+                }}
                 onEdit={handleEditSubject}
                 onDelete={handleDeleteSubject}
               />

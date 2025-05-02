@@ -1,10 +1,12 @@
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
+import { AuthProvider } from "./context/AuthContext";
+import PrivateRoute from "./components/auth/PrivateRoute";
 
 // Pages
-import SignIn from "./pages/SignIn";
-import SignUp from "./pages/SignUp";
+import SignIn from "./pages/Auth/SignIn";
+import SignUp from "./pages/Auth/SignUp";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import AboutPage from "./pages/AboutPage";
@@ -18,18 +20,27 @@ function App() {
   return (
     <>
       <Router>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/subjects" element={<SubjectsPage />} />
-          <Route path="/subjects/:subjectId" element={<NotesPage />} />
-          <Route path="/subjects/:subjectId/notes/:noteId" element={<NoteDetailPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/project-qa" element={<ProjectQA />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<Index />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/project-qa" element={<ProjectQA />} />
+            
+            {/* Protected routes */}
+            <Route element={<PrivateRoute />}>
+              <Route path="/subjects" element={<SubjectsPage />} />
+              <Route path="/subjects/:subjectId" element={<NotesPage />} />
+              <Route path="/subjects/:subjectId/notes/:noteId" element={<NoteDetailPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+            </Route>
+            
+            {/* 404 route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </Router>
       <Toaster position="bottom-right" />
     </>

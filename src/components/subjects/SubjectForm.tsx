@@ -6,19 +6,26 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
+interface Subject {
+  id: string;
+  name: string;
+  description: string | null;
+  color: string;
+}
+
 interface SubjectFormProps {
   open: boolean;
   onClose: () => void;
-  onSave: (subject: any) => void;
-  initialData?: any;
+  onSave: (subject: Subject) => void;
+  initialData?: Subject | null;
 }
 
 export function SubjectForm({ open, onClose, onSave, initialData }: SubjectFormProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Subject>({
     id: '',
-    title: '',
+    name: '',
     description: '',
-    color: ''
+    color: 'bg-flipboard-soft-purple'
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,14 +40,14 @@ export function SubjectForm({ open, onClose, onSave, initialData }: SubjectFormP
     if (initialData) {
       setFormData({
         id: initialData.id || '',
-        title: initialData.title || '',
+        name: initialData.name || '',
         description: initialData.description || '',
         color: initialData.color || colors[0].value
       });
     } else {
       setFormData({
         id: '',
-        title: '',
+        name: '',
         description: '',
         color: colors[0].value
       });
@@ -59,32 +66,21 @@ export function SubjectForm({ open, onClose, onSave, initialData }: SubjectFormP
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title.trim()) {
-      toast.error('Please enter a subject title');
+    if (!formData.name.trim()) {
+      toast.error('Please enter a subject name');
       return;
     }
     
     setIsSubmitting(true);
     
-    // Generate ID if it doesn't exist (new subject)
-    const subjectData = {
-      ...formData,
-      id: formData.id || `subject_${Date.now()}`
-    };
-    
-    // Simulate API call
-    setTimeout(() => {
-      try {
-        onSave(subjectData);
-        toast.success(`Subject ${initialData ? 'updated' : 'created'} successfully`);
-        onClose();
-      } catch (error) {
-        console.error('Error saving subject:', error);
-        toast.error('Failed to save subject');
-      } finally {
-        setIsSubmitting(false);
-      }
-    }, 500);
+    try {
+      onSave(formData);
+    } catch (error) {
+      console.error('Error saving subject:', error);
+      toast.error('Failed to save subject');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -98,13 +94,13 @@ export function SubjectForm({ open, onClose, onSave, initialData }: SubjectFormP
         
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-              Subject Title
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              Subject Name
             </label>
             <Input
-              id="title"
-              name="title"
-              value={formData.title}
+              id="name"
+              name="name"
+              value={formData.name}
               onChange={handleChange}
               placeholder="e.g., Mathematics"
               disabled={isSubmitting}
@@ -119,7 +115,7 @@ export function SubjectForm({ open, onClose, onSave, initialData }: SubjectFormP
             <Textarea
               id="description"
               name="description"
-              value={formData.description}
+              value={formData.description || ''}
               onChange={handleChange}
               placeholder="Add a brief description of this subject"
               disabled={isSubmitting}

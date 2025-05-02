@@ -2,10 +2,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Github } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 export function HeroSection() {
   const [isVisible, setIsVisible] = useState(false);
+  const { isAuthenticated } = useAuth();
   
   useEffect(() => {
     setIsVisible(true);
@@ -37,15 +38,27 @@ export function HeroSection() {
           </p>
           
           <div className={`flex flex-wrap justify-center gap-4 transform transition-all duration-700 delay-300 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-            <Button asChild size="lg" className="bg-flipboard-purple hover:bg-flipboard-dark-purple text-white px-8 py-6 h-auto rounded">
-              <Link to="/signup" className="mx-0 py-[10px]">
-                Get Started
-              </Link>
-            </Button>
-
-            <Button asChild variant="outline" size="lg" className="border-gray-300 bg-white text-gray-800 hover:bg-gray-100 px-8 py-6 h-auto rounded flex items-center gap-2">
-              
-            </Button>
+            {isAuthenticated ? (
+              <Button asChild size="lg" className="bg-flipboard-purple hover:bg-flipboard-dark-purple text-white px-8 py-6 h-auto rounded">
+                <Link to="/subjects" className="mx-0 py-[10px]">
+                  My Subjects
+                </Link>
+              </Button>
+            ) : (
+              <>
+                <Button asChild size="lg" className="bg-flipboard-purple hover:bg-flipboard-dark-purple text-white px-8 py-6 h-auto rounded">
+                  <Link to="/signup" className="mx-0 py-[10px]">
+                    Get Started
+                  </Link>
+                </Button>
+                
+                <Button asChild variant="outline" size="lg" className="border-gray-300 bg-white text-gray-800 hover:bg-gray-100 px-8 py-6 h-auto rounded">
+                  <Link to="/signin" className="mx-0 py-[10px]">
+                    Sign In
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>

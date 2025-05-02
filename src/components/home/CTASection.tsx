@@ -1,8 +1,11 @@
 
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
 
 export function CTASection() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <section className="bg-flipboard-soft-purple py-20">
       <div className="container mx-auto px-4">
@@ -15,17 +18,27 @@ export function CTASection() {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4">
-            <Button asChild size="lg" className="bg-flipboard-purple hover:bg-flipboard-dark-purple text-white">
-              <Link to="/signup">
-                Sign up for free
-              </Link>
-            </Button>
-            
-            <Button asChild variant="outline" size="lg" className="border-flipboard-purple text-flipboard-purple hover:bg-flipboard-purple hover:text-white">
-              <Link to="/signin">
-                Sign in
-              </Link>
-            </Button>
+            {isAuthenticated ? (
+              <Button asChild size="lg" className="bg-flipboard-purple hover:bg-flipboard-dark-purple text-white">
+                <Link to="/subjects">
+                  Go to my subjects
+                </Link>
+              </Button>
+            ) : (
+              <>
+                <Button asChild size="lg" className="bg-flipboard-purple hover:bg-flipboard-dark-purple text-white">
+                  <Link to="/signup">
+                    Sign up for free
+                  </Link>
+                </Button>
+                
+                <Button asChild variant="outline" size="lg" className="border-flipboard-purple text-flipboard-purple hover:bg-flipboard-purple hover:text-white">
+                  <Link to="/signin">
+                    Sign in
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
