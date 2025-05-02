@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -24,8 +25,8 @@ export function HeroSection() {
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className={`text-5xl md:text-7xl font-bold mb-6 leading-tight transform transition-all duration-700 delay-100 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-            Build in a weekend
-            <span className="block text-flipboard-purple">Scale to millions</span>
+            Capture ideas,
+            <span className="block text-flipboard-purple">Organize knowledge</span>
           </h1>
           
           <p className={`text-lg md:text-xl mb-10 max-w-2xl mx-auto text-gray-600 transform transition-all duration-700 delay-200 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
