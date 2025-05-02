@@ -1,15 +1,15 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { Mail, Lock } from 'lucide-react';
 
 const SignIn = () => {
-  const { signIn, isLoading } = useAuth();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -23,9 +23,40 @@ const SignIn = () => {
     e.preventDefault();
     
     try {
-      await signIn(formData.email, formData.password);
-    } catch (error) {
-      // Error is handled in the auth context
+      setIsLoading(true);
+      
+      // Get registered users from localStorage
+      const storedUsers = localStorage.getItem('flipboard_registered_users');
+      const users = storedUsers ? JSON.parse(storedUsers) : [];
+      
+      // Find matching user
+      const user = users.find((u: any) => 
+        u.email === formData.email && u.password === formData.password
+      );
+      
+      if (!user) {
+        toast.error("Invalid login credentials");
+        return;
+      }
+      
+      // Create session
+      localStorage.setItem('flipboard_auth', JSON.stringify({
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name || '',
+        },
+        authenticated: true,
+        timestamp: Date.now()
+      }));
+      
+      toast.success('Signed in successfully');
+      navigate('/subjects');
+    } catch (error: any) {
+      console.error("Login error:", error);
+      toast.error(error.message || 'Failed to sign in');
+    } finally {
+      setIsLoading(false);
     }
   };
 

@@ -1,18 +1,34 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/AuthContext';
 
 export function HeroSection() {
   const [isVisible, setIsVisible] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   
   useEffect(() => {
     setIsVisible(true);
+    
+    const checkAuth = () => {
+      const auth = localStorage.getItem('flipboard_auth');
+      setIsAuthenticated(!!auth);
+    };
+    
+    // Check on initial load
+    checkAuth();
+    
+    // Listen for storage changes
+    window.addEventListener('storage', checkAuth);
+    window.addEventListener('authChange', checkAuth);
+    
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+      window.removeEventListener('authChange', checkAuth);
+    };
   }, []);
   
-  return <section className="bg-white text-black py-32 md:py-40 relative overflow-hidden">
+  return (
+    <section className="bg-white text-black py-32 md:py-40 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden">
         {Array.from({
         length: 15
@@ -62,5 +78,6 @@ export function HeroSection() {
           </div>
         </div>
       </div>
-    </section>;
+    </section>
+  );
 }

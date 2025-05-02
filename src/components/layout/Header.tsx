@@ -1,20 +1,68 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut, Menu, User, X, BookOpen, Info, FileQuestion } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
+
+interface AuthUser {
+  id: string;
+  email: string;
+  name?: string;
+}
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAuthenticated, signOut } = useAuth();
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const auth = localStorage.getItem('flipboard_auth');
+      if (auth) {
+        try {
+          const authData = JSON.parse(auth);
+          setUser(authData.user);
+          setIsAuthenticated(true);
+        } catch (error) {
+          console.error('Error parsing auth data:', error);
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    };
+    
+    // Check on initial load
+    checkAuth();
+    
+    // Listen for storage changes
+    window.addEventListener('storage', checkAuth);
+    
+    // Custom event for auth changes within the same page
+    window.addEventListener('authChange', checkAuth);
+    
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+      window.removeEventListener('authChange', checkAuth);
+    };
+  }, []);
 
   const handleLogout = () => {
-    signOut();
+    localStorage.removeItem('flipboard_auth');
+    setUser(null);
+    setIsAuthenticated(false);
+    toast.success('You have been signed out');
+    navigate('/');
+    
+    // Dispatch event for other components to know
+    window.dispatchEvent(new Event('authChange'));
   };
 
   const toggleMenu = () => {
@@ -60,7 +108,7 @@ export function Header() {
                     <Link to="/profile">
                       <Button variant="ghost" size="sm" className="flex items-center">
                         <User size={18} className="mr-1" />
-                        <span>{user?.user_metadata?.full_name || 'Profile'}</span>
+                        <span>{user?.name || 'Profile'}</span>
                       </Button>
                     </Link>
                     

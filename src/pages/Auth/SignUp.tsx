@@ -1,15 +1,15 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { Mail, Lock, User } from 'lucide-react';
 
 const SignUp = () => {
-  const { signUp, isLoading } = useAuth();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -33,11 +33,51 @@ const SignUp = () => {
     }
     
     try {
-      await signUp(formData.email, formData.password, {
-        full_name: formData.fullName
-      });
-    } catch (error) {
-      // Error is handled in the auth context
+      setIsLoading(true);
+      
+      // Get existing users or start with defaults
+      const storedUsers = localStorage.getItem('flipboard_registered_users');
+      let users = storedUsers ? JSON.parse(storedUsers) : [
+        {
+          id: 'user_123456',
+          email: 'test@example.com',
+          password: 'password123',
+          name: 'Test User',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 'user_789012',
+          email: 'demo@example.com',
+          password: 'demo123',
+          name: 'Demo User',
+          createdAt: new Date().toISOString()
+        }
+      ];
+      
+      // Check if email exists already
+      if (users.some((user: any) => user.email === formData.email)) {
+        toast.error('This email is already registered');
+        return;
+      }
+      
+      // Add new user
+      const newUser = {
+        id: 'user_' + Math.random().toString(36).substring(2, 9),
+        email: formData.email,
+        password: formData.password,
+        name: formData.fullName,
+        createdAt: new Date().toISOString()
+      };
+      
+      users.push(newUser);
+      localStorage.setItem('flipboard_registered_users', JSON.stringify(users));
+      
+      toast.success('Account created successfully!');
+      navigate('/signin');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create account');
+    } finally {
+      setIsLoading(false);
     }
   };
 

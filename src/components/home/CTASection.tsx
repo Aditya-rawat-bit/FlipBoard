@@ -1,10 +1,31 @@
 
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/AuthContext';
 
 export function CTASection() {
-  const { isAuthenticated } = useAuth();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const auth = localStorage.getItem('flipboard_auth');
+      setIsAuthenticated(!!auth);
+    };
+    
+    // Check on initial load
+    checkAuth();
+    
+    // Listen for storage changes
+    window.addEventListener('storage', checkAuth);
+    
+    // Custom event for auth changes within the same page
+    window.addEventListener('authChange', checkAuth);
+    
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+      window.removeEventListener('authChange', checkAuth);
+    };
+  }, []);
 
   return (
     <section className="bg-flipboard-soft-purple py-20">

@@ -108,7 +108,15 @@ const ProfilePage = () => {
       email: formData.email
     };
     
-    localStorage.setItem('flipboard_auth', JSON.stringify({ user: updatedUser }));
+    const auth = localStorage.getItem('flipboard_auth');
+    if (auth) {
+      const authData = JSON.parse(auth);
+      localStorage.setItem('flipboard_auth', JSON.stringify({ 
+        ...authData,
+        user: updatedUser 
+      }));
+    }
+    
     setUser(updatedUser);
     setIsEditing(false);
     toast.success('Profile updated successfully');
