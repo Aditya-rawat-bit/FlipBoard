@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff, Image } from 'lucide-react';
 import { toast } from 'sonner';
@@ -10,8 +11,25 @@ interface NoteMediaInputProps {
 
 export function NoteMediaInput({ onImageAdd, onTextAdd }: NoteMediaInputProps) {
   const [isRecording, setIsRecording] = useState(false);
-  const [recognitionSupported] = useState('webkitSpeechRecognition' in window || 'SpeechRecognition' in window);
+  const [recognitionSupported, setRecognitionSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const transcriptRef = useRef<string>('');
+
+  // Check for speech recognition support on component mount
+  useEffect(() => {
+    const isSpeechRecognitionSupported = 
+      'SpeechRecognition' in window || 
+      'webkitSpeechRecognition' in window;
+      
+    setRecognitionSupported(isSpeechRecognitionSupported);
+    
+    // Clean up on unmount
+    return () => {
+      if (recognitionRef.current && isRecording) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -38,39 +56,67 @@ export function NoteMediaInput({ onImageAdd, onTextAdd }: NoteMediaInputProps) {
     }
 
     if (isRecording) {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-      setIsRecording(false);
+      stopRecording();
     } else {
+      startRecording();
+    }
+  };
+
+  const startRecording = () => {
+    try {
       const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognitionAPI();
-      recognitionRef.current.continuous = true;
-      recognitionRef.current.interimResults = true;
-
-      recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
-        const transcript = Array.from(event.results)
-          .map((result: any) => result[0].transcript)
-          .join(' ');
+      
+      if (recognitionRef.current) {
+        recognitionRef.current.continuous = true;
+        recognitionRef.current.interimResults = true;
+        transcriptRef.current = ''; // Reset transcript
+        
+        recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+          const transcript = Array.from(event.results)
+            .map(result => result[0].transcript)
+            .join(' ');
+            
+          transcriptRef.current = transcript;
           
-        if (event.results[0].isFinal) {
-          onTextAdd(transcript);
-        }
-      };
+          // Only submit final results
+          const isFinal = event.results[event.results.length - 1].isFinal;
+          if (isFinal) {
+            onTextAdd(transcriptRef.current.trim());
+          }
+        };
 
-      recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
-        console.error('Speech recognition error:', event.error);
-        toast.error('Error with speech recognition');
-        setIsRecording(false);
-      };
+        recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
+          console.error('Speech recognition error:', event.error);
+          toast.error(`Speech recognition error: ${event.error}`);
+          setIsRecording(false);
+        };
 
-      recognitionRef.current.onend = () => {
-        setIsRecording(false);
-      };
+        recognitionRef.current.onend = () => {
+          setIsRecording(false);
+          // If we have transcript content and it wasn't previously submitted
+          if (transcriptRef.current.trim()) {
+            onTextAdd(transcriptRef.current.trim());
+            transcriptRef.current = ''; // Clear after submission
+          }
+        };
 
-      recognitionRef.current.start();
-      setIsRecording(true);
-      toast.success('Started recording...');
+        recognitionRef.current.start();
+        setIsRecording(true);
+        toast.success('Started recording...');
+      }
+    } catch (error) {
+      console.error('Error starting speech recognition:', error);
+      toast.error('Failed to start speech recognition');
+      setIsRecording(false);
+    }
+  };
+
+  const stopRecording = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+      toast.success('Recording stopped');
     }
   };
 
@@ -82,6 +128,10 @@ export function NoteMediaInput({ onImageAdd, onTextAdd }: NoteMediaInputProps) {
         size="icon"
         onClick={toggleRecording}
         className={`${isRecording ? 'bg-red-100 text-red-600 hover:bg-red-200' : ''}`}
+        disabled={!recognitionSupported}
+        title={recognitionSupported ? 
+          (isRecording ? 'Stop recording' : 'Start recording') : 
+          'Speech recognition not supported in this browser'}
       >
         {isRecording ? <MicOff size={18} /> : <Mic size={18} />}
       </Button>
