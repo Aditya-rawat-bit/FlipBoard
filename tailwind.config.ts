@@ -64,15 +64,15 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				flipboard: {
-					purple: '#9b87f5',
-					'dark-purple': '#7E69AB',
-					'soft-purple': '#E5DEFF',
+					purple: '#6E59A5', // Changed from #9b87f5
+					'dark-purple': '#1A1F2C', // Changed from #7E69AB
+					'soft-purple': '#D6BCFA', // Changed from #E5DEFF
 					'soft-pink': '#FFDEE2',
 					'soft-blue': '#D3E4FD',
-					'accent-blue': '#1EAEDB',
+					'accent-blue': '#0EA5E9', // Changed from #1EAEDB
 					'accent-orange': '#F97316',
-					neutral: '#8E9196',
-					'dark-bg': '#1A1F2C',
+					neutral: '#403E43', // Changed from #8E9196
+					'dark-bg': '#221F26', // Changed from #1A1F2C
 				},
 				emerald: {
 					50: '#ecfdf5',
